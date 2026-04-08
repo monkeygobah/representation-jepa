@@ -1,0 +1,105 @@
+run:
+  name: "debug"
+  runs_root: "/runs"
+  seed: 2026
+  total_steps: 50000
+  warmup_steps: 2500
+  log_every: 100
+  ckpt_every: 1000
+  resume: false
+  resume_ckpt: null
+
+runtime:
+  distributed: "auto"      # "auto" | true | false
+  ddp_backend: "nccl"
+  gpu: 0                   # used only when distributed is false
+
+data:
+  dataset: "subset6_minus_7"   # experiment label for logging
+  train_root: "/data/prepared_datasets/subset6_minus_7_train_flat"
+  val_root: "/data/prepared_datasets/subset6_minus_7_val_flat"
+  test_root: "/data/prepared_datasets/subset6_minus_7_test_flat"
+  external_test_roots:
+    - "/data/prepared_datasets/subset7_eval_224_flat"
+    - "/data/prepared_datasets/cfc_split_eval_224"
+  image_size: 224
+
+dataloader:
+  batch_size: 128
+  num_workers: 8
+  shuffle: true            # used only when not using a DistributedSampler
+  pin_memory: true
+  drop_last: true
+
+model:
+  backbone: "resnet101"
+  init: "seg_init"         # "random" | "imagenet" | "seg_init"
+  seg_ckpt: "/models/hp_tune.pth"
+  feat_dim: 2048           
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3      
+
+ssl:
+  method: "lejepa"         # "lejepa" | "infonce" | "vicreg" | "byol"
+  aug_mode: "local_only"   # "local_only" | "multicrop"
+  normalize_imagenet: true
+
+  # local_only mode
+  V: 2
+  crop_size: 112
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+
+  # multicrop mode
+  global_V: 2
+  global_crop: 196
+  global_scale_min: 0.3
+  global_scale_max: 1.0
+  local_V: 6
+  local_crop: 86
+  local_scale_min: 0.05
+  local_scale_max: 0.3
+
+loss:
+  # LeJEPA / SIGReg settings
+  lamb: 0.05
+  sigreg_knots: 17
+  sigreg_num_slices: 256
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7
+
+amp:
+  enabled: true
+  dtype: "bf16"            # "bf16" | "fp16"
+# InfoNCE settings for the cross-view contrastive objective.
+infonce:
+  tau: 0.2
+  gather: true
+  eps: 1.0e-8
+
+vicreg:
+  w_inv: 25.0
+  w_var: 25.0
+  w_cov: 1.0
+  var_target: 1.0
+  eps: 1.0e-4
+  gather: true
+
+byol:
+  pred_hidden: 2048
+  pred_layers: 2
+  m: 0.996
+  m_final: 1.0
+  eps: 1.0e-8
+
+embed:
+  max_batches: 3
+  pool: "4x4"
+  save_npz: true

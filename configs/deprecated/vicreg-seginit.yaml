@@ -1,0 +1,50 @@
+run:
+  name: "vicreg-seg_init-2Vs"
+  seed: 2026
+  total_steps: 50000
+  warmup_steps: 2500
+  log_every: 100
+  ckpt_every: 1000
+
+data:
+  root: "/workspace/data/cfc_split"
+
+dataloader:
+  batch_size: 84
+  num_workers: 8
+  pin_memory: true
+  drop_last: true
+
+model:
+  init: "seg_init"              # random | imagenet | seg_init
+  seg_ckpt: "/workspace/models/hp_tune.pth"
+  proj_dim: 128                 # d in the paper
+  proj_hidden: 2048
+  proj_layers: 3
+
+ssl:
+  method: "vicreg"
+  V: 2                          # VICReg is 2-view
+  crop_size: 128
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+  normalize_imagenet: true
+
+vicreg:
+  lambda_inv: 25.0              # λ (invariance)
+  mu_var: 25.0                  # μ (variance)
+  nu_cov: 1.0                   # ν (covariance)
+  gamma: 1.0                    # target std (γ)
+  eps: 1.0e-4                   # numerical stability
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7
+
+amp:
+  enabled: true
+  dtype: "bf16"

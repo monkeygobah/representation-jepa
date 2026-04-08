@@ -1,0 +1,57 @@
+run:
+  name: "lejepa-seginit-8Vs-MAX-MEM"
+  seed: 2026
+  total_steps: 50000      # pick 50k or 100k; 100k is a solid default
+  warmup_steps: 2500       # ~5% warmup is typical; keep fixed across methods
+  log_every: 100
+  ckpt_every: 1000
+
+data:
+  root: "/workspace/data/cfc_split"
+
+dataloader:
+  batch_size: 35 # 3 gpu
+  num_workers: 8
+  pin_memory: true
+  drop_last: true
+
+model:
+  init: "seg_init"          # "random" | "imagenet" | "seg_init"
+  seg_ckpt: "/workspace/models/hp_tune.pth"
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3          # 2 or 3
+
+ssl:
+  method: "lejepa"
+  V: 4                 
+
+  aug_mode: multicrop   # or omit for default local_only
+  normalize_imagenet: true
+
+  global_V: 2
+  global_crop: 224
+  global_scale_min: 0.3
+  global_scale_max: 1.0
+
+  local_V: 6
+  local_crop: 98
+  local_scale_min: 0.05
+  local_scale_max: 0.3
+
+loss:
+  lamb: 0.05
+  sigreg_knots: 17
+  sigreg_num_slices: 256  # like demo
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4   
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7     
+
+amp:
+  enabled: true
+  dtype: "bf16"           # "bf16" or "fp16"

@@ -1,7 +1,6 @@
 data/
 models/
 runs/
-configs/
 __pycache__/
 *.pyc
 _logs
