@@ -1,0 +1,61 @@
+run:
+  name: geometry-fixedcompute-vicreg-random
+  runs_root: /home/georgie/Desktop/neurips/representation/smoke_runs
+  seed: 2026
+  total_steps: 1
+  warmup_steps: 1
+  log_every: 1
+  ckpt_every: 0
+  resume: false
+  resume_ckpt: null
+runtime:
+  distributed: false
+  ddp_backend: nccl
+  gpu: 0
+data:
+  dataset: subset6_minus_7
+  train_root: /home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat
+  val_root: /home/georgie/Desktop/neurips/representation/data/subset6_minus_7_val_flat
+  test_root: /home/georgie/Desktop/neurips/representation/data/subset6_minus_7_test_flat
+  external_test_roots:
+  - /home/georgie/Desktop/neurips/representation/data/subset7_eval_224_flat
+  - /home/georgie/Desktop/neurips/representation/data/cfc_split_eval_224
+  image_size: 224
+dataloader:
+  batch_size: 1
+  num_workers: 0
+  shuffle: true
+  pin_memory: false
+  drop_last: true
+model:
+  backbone: resnet101
+  init: random
+  seg_ckpt: /home/georgie/Desktop/neurips/representation/models/hp_tune.pth
+  feat_dim: 2048
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3
+ssl:
+  method: vicreg
+  aug_mode: local_only
+  normalize_imagenet: true
+  V: 2
+  crop_size: 112
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+optim:
+  lr: 0.0005
+  weight_decay: 0.0005
+  warmup_factor: 0.01
+sched:
+  final_lr: 5.0e-07
+amp:
+  enabled: false
+  dtype: bf16
+vicreg:
+  w_inv: 25.0
+  w_var: 25.0
+  w_cov: 1.0
+  var_target: 1.0
+  eps: 0.0001
+  gather: true
