@@ -300,10 +300,12 @@ def main(args):
                     with open(metrics_path, "a") as f:
                         f.write(json.dumps(rec) + "\n")
 
-                if is_main and ckpt_every > 0 and step > 0 and step % ckpt_every == 0:
+                completed_step = step + 1
+
+                if is_main and ckpt_every > 0 and completed_step % ckpt_every == 0:
                     save_checkpoint(
                         ckpt_dir=rp.ckpt_dir,
-                        step=step,
+                        step=completed_step,
                         encoder=encoder,
                         objective=objective,
                         opt=opt,

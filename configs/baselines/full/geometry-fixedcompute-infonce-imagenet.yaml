@@ -1,8 +1,8 @@
 run:
-  name: "geometry-fixedcompute-lejepa-random"
+  name: "geometry-fixedcompute-infonce-imagenet"
   runs_root: "/home/georgie/Desktop/neurips/representation/runs"
   seed: 2026
-  total_steps: 50000
+  total_steps: 10000
   warmup_steps: 2500
   log_every: 100
   ckpt_every: 1000
@@ -25,7 +25,7 @@ data:
   image_size: 224
 
 dataloader:
-  batch_size: 128
+  batch_size: 192
   num_workers: 8
   shuffle: true
   pin_memory: true
@@ -33,7 +33,7 @@ dataloader:
 
 model:
   backbone: "resnet101"
-  init: "random"
+  init: "imagenet"
   seg_ckpt: "/home/georgie/Desktop/neurips/representation/models/hp_tune.pth"
   feat_dim: 2048
   proj_dim: 128
@@ -41,18 +41,13 @@ model:
   proj_layers: 3
 
 ssl:
-  method: "lejepa"
+  method: "infonce"
   aug_mode: "local_only"
   normalize_imagenet: true
   V: 2
   crop_size: 112
   crop_scale_min: 0.08
   crop_scale_max: 1.0
-
-loss:
-  lamb: 0.05
-  sigreg_knots: 17
-  sigreg_num_slices: 256
 
 optim:
   lr: 5.0e-4
@@ -65,3 +60,8 @@ sched:
 amp:
   enabled: true
   dtype: "bf16"
+
+infonce:
+  tau: 0.2
+  gather: true
+  eps: 1.0e-8

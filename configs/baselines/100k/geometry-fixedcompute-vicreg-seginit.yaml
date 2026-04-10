@@ -1,8 +1,8 @@
 run:
-  name: "geometry-fixedcompute-infonce-seginit"
+  name: "geometry-fixedcompute-100k-vicreg-seginit"
   runs_root: "/home/georgie/Desktop/neurips/representation/runs"
   seed: 2026
-  total_steps: 50000
+  total_steps: 10000
   warmup_steps: 2500
   log_every: 100
   ckpt_every: 1000
@@ -16,7 +16,7 @@ runtime:
 
 data:
   dataset: "subset6_minus_7"
-  train_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat"
+  train_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat_100_000"
   val_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_val_flat"
   test_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_test_flat"
   external_test_roots:
@@ -41,7 +41,7 @@ model:
   proj_layers: 3
 
 ssl:
-  method: "infonce"
+  method: "vicreg"
   aug_mode: "local_only"
   normalize_imagenet: true
   V: 2
@@ -61,7 +61,10 @@ amp:
   enabled: true
   dtype: "bf16"
 
-infonce:
-  tau: 0.2
+vicreg:
+  w_inv: 25.0
+  w_var: 25.0
+  w_cov: 1.0
+  var_target: 1.0
+  eps: 1.0e-4
   gather: true
-  eps: 1.0e-8

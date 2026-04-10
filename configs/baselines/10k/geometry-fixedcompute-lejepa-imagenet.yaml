@@ -1,0 +1,67 @@
+run:
+  name: "geometry-fixedcompute-10k-lejepa-imagenet"
+  runs_root: "/home/georgie/Desktop/neurips/representation/runs"
+  seed: 2026
+  total_steps: 10000
+  warmup_steps: 2500
+  log_every: 100
+  ckpt_every: 1000
+  resume: false
+  resume_ckpt: null
+
+runtime:
+  distributed: "auto"
+  ddp_backend: "nccl"
+  gpu: 0
+
+data:
+  dataset: "subset6_minus_7"
+  train_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat_10_000"
+  val_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_val_flat"
+  test_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_test_flat"
+  external_test_roots:
+    - "/home/georgie/Desktop/neurips/representation/data/subset7_eval_224_flat"
+    - "/home/georgie/Desktop/neurips/representation/data/cfc_split_eval_224"
+  image_size: 224
+
+dataloader:
+  batch_size: 192
+  num_workers: 8
+  shuffle: true
+  pin_memory: true
+  drop_last: true
+
+model:
+  backbone: "resnet101"
+  init: "imagenet"
+  seg_ckpt: "/home/georgie/Desktop/neurips/representation/models/hp_tune.pth"
+  feat_dim: 2048
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3
+
+ssl:
+  method: "lejepa"
+  aug_mode: "local_only"
+  normalize_imagenet: true
+  V: 2
+  crop_size: 112
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+
+loss:
+  lamb: 0.05
+  sigreg_knots: 17
+  sigreg_num_slices: 256
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7
+
+amp:
+  enabled: true
+  dtype: "bf16"
