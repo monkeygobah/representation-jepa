@@ -1,0 +1,9 @@
+nohup: ignoring input
+Starting seginit suite
+  size_dir: 100k
+  gpu_set: 0,1,2
+  nproc_per_node: 3
+  log_dir: _logs/baselines/100k_seginit_20260413_165125
+[2026-04-13T16:51:25+00:00] START geometry-fixedcompute-infonce-seginit
+[2026-04-13T19:00:57+00:00] DONE  geometry-fixedcompute-infonce-seginit
+[2026-04-13T19:00:57+00:00] START geometry-fixedcompute-lejepa-seginit
