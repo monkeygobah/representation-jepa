@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-SIZE_DIR="1m"
+SIZE_DIR="10k"
 CONFIG_DIR="configs/baselines/$SIZE_DIR"
 GPU_SET="0,1,2"
 NPROC_PER_NODE=3
