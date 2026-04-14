@@ -60,19 +60,19 @@ def main() -> None:
     ap.add_argument(
         "--src-root",
         type=Path,
-        default=Path("/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat"),
+        default=Path("/workspace/data/subset6_minus_7_train_flat"),
         help="Flat source image directory.",
     )
     ap.add_argument(
         "--dst-root",
         type=Path,
-        default=Path("/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat_10_000"),
+        default=Path("/workspace/data/subset6_minus_7_train_flat_10_000"),
         help="Destination directory for the sampled 10k subset.",
     )
     ap.add_argument(
         "--manifest-path",
         type=Path,
-        default=Path("/home/georgie/Desktop/neurips/representation/data/manifests/subset6_minus_7_train_flat_10_000.txt"),
+        default=Path("/workspace/data/manifests/subset6_minus_7_train_flat_10_000.txt"),
         help="Manifest file listing sampled filenames.",
     )
     ap.add_argument("--seed", type=int, default=2026, help="Random seed.")

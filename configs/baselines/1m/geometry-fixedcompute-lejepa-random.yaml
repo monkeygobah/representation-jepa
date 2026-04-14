@@ -1,6 +1,6 @@
 run:
   name: "geometry-fixedcompute-1m-lejepa-random"
-  runs_root: "/home/georgie/Desktop/neurips/representation/runs"
+  runs_root: "/workspace/runs"
   seed: 2026
   total_steps: 10000
   warmup_steps: 2500
@@ -16,12 +16,12 @@ runtime:
 
 data:
   dataset: "subset6_minus_7"
-  train_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_train_flat_1_000_000"
-  val_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_val_flat"
-  test_root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_test_flat"
+  train_root: "/workspace/data/subset6_minus_7_train_flat_1_000_000"
+  val_root: "/workspace/data/subset6_minus_7_val_flat"
+  test_root: "/workspace/data/subset6_minus_7_test_flat"
   external_test_roots:
-    - "/home/georgie/Desktop/neurips/representation/data/subset7_eval_224_flat"
-    - "/home/georgie/Desktop/neurips/representation/data/cfc_split_eval_224"
+    - "/workspace/data/subset7_eval_224_flat"
+    - "/workspace/data/cfc_split_eval_224"
   image_size: 224
 
 dataloader:
@@ -34,7 +34,7 @@ dataloader:
 model:
   backbone: "resnet101"
   init: "random"
-  seg_ckpt: "/home/georgie/Desktop/neurips/representation/models/hp_tune.pth"
+  seg_ckpt: "/workspace/models/hp_tune.pth"
   feat_dim: 2048
   proj_dim: 128
   proj_hidden: 2048
