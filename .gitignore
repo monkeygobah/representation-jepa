@@ -7,3 +7,4 @@ _logs
 embedding_extract/outputs/
 embedding_extract/raw_embeddings/
 embedding_extract/all_pts_to_analyze/
+Dockerfile

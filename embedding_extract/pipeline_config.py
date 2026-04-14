@@ -6,6 +6,9 @@ from typing import Any
 
 import yaml
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+WORKSPACE_ROOT = Path("/workspace")
+
 
 def _deep_update(base: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
     merged = dict(base)
@@ -109,7 +112,11 @@ def _resolve_path(base_dir: Path, raw: str | None) -> Path | None:
         return None
     path = Path(raw)
     if path.is_absolute():
-        return path
+        try:
+            workspace_relative = path.relative_to(WORKSPACE_ROOT)
+        except ValueError:
+            return path
+        return (PROJECT_ROOT / workspace_relative).resolve()
     return (base_dir / path).resolve()
 
 

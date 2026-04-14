@@ -1,15 +1,15 @@
 study:
   name: "geometry_baselines_100k"
-  output_root: "../outputs"
+  output_root: "/workspace/embedding_extract/outputs"
 
 runs:
   - run_name: "geometry-fixedcompute-100k-infonce-random"
-    run_dir: "/home/georgie/Desktop/neurips/representation/runs/20260410_181310__geometry-fixedcompute-100k-infonce-random"
+    run_dir: "/workspace/runs/20260410_181310__geometry-fixedcompute-100k-infonce-random"
     checkpoint_step: 10000
 
 datasets:
   - dataset_name: "subset6_minus_7_test"
-    root: "/home/georgie/Desktop/neurips/representation/data/subset6_minus_7_test_flat"
+    root: "/workspace/data/subset6_minus_7_test_flat"
     split_label: "test"
     image_size: 224
     normalize_imagenet: true
