@@ -1,0 +1,75 @@
+study:
+  name: "geometry_100k"
+  output_root: "/workspace/embedding_extract/outputs"
+
+runs:
+  - run_name: "geometry-fixedcompute-100k-infonce-imagenet"
+    run_dir: "/workspace/runs/20260410_181233__geometry-fixedcompute-100k-infonce-imagenet"
+    checkpoint_step: 10000
+
+  - run_name: "geometry-fixedcompute-100k-infonce-random"
+    run_dir: "/workspace/runs/20260410_181310__geometry-fixedcompute-100k-infonce-random"
+    checkpoint_step: 10000
+
+  - run_name: "geometry-fixedcompute-100k-lejepa-imagenet"
+    run_dir: "/workspace/runs/20260411_205608__geometry-fixedcompute-100k-lejepa-imagenet"
+    checkpoint_step: 10000
+
+  - run_name: "geometry-fixedcompute-100k-lejepa-random"
+    run_dir: "/workspace/runs/20260412_030329__geometry-fixedcompute-100k-lejepa-random"
+    checkpoint_step: 10000
+
+  - run_name: "geometry-fixedcompute-100k-vicreg-imagenet"
+    run_dir: "/workspace/runs/20260412_234039__geometry-fixedcompute-100k-vicreg-imagenet"
+    checkpoint_step: 10000
+
+  - run_name: "geometry-fixedcompute-100k-vicreg-random"
+    run_dir: "/workspace/runs/20260413_105634__geometry-fixedcompute-100k-vicreg-random"
+    checkpoint_step: 10000
+
+  # Add seginit runs here if/when their checkpoints are available under /workspace/runs.
+  # Example:
+  # - run_name: "geometry-fixedcompute-100k-infonce-seginit"
+  #   run_dir: "/workspace/runs/<timestamp>__geometry-fixedcompute-100k-infonce-seginit"
+  #   checkpoint_step: 10000
+
+datasets:
+  - dataset_name: "subset6_minus_7_test"
+    root: "/workspace/data/subset6_minus_7_test_flat"
+    split_label: "test"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "subset7_eval"
+    root: "/workspace/data/subset7_eval_224_flat"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "cfc_eval"
+    root: "/workspace/data/cfc_split_eval_224"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+extraction:
+  batch_size: 256
+  num_workers: 4
+  device: "cuda:0"
+  precision: "fp32"
+  overwrite: false
+
+artifact:
+  save_backbone: true
+  save_projected: true
+
+analyses:
+  isotropy:
+    enabled: true
+    num_pairs: 200000
+    seed: 0
+    embedding_keys: ["emb", "proj"]
+
+aggregation:
+  summary_csv: "isotropy_summary_100k.csv"
+  row_keys: ["run_name", "checkpoint_step", "dataset_name", "split_label", "embedding_key"]

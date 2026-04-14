@@ -1,0 +1,63 @@
+study:
+  name: "geometry_10k"
+  output_root: "/workspace/embedding_extract/outputs"
+
+runs:
+  - run_name: "geometry-fixedcompute-10k-infonce-imagenet"
+    run_dir: "/workspace/runs/20260414_135837__geometry-fixedcompute-10k-infonce-imagenet"
+    checkpoint_step: 10000
+
+  # Add more 10k runs here as they become available in /workspace/runs.
+  # Example:
+  # - run_name: "geometry-fixedcompute-10k-infonce-random"
+  #   run_dir: "/workspace/runs/<timestamp>__geometry-fixedcompute-10k-infonce-random"
+  #   checkpoint_step: 10000
+  #
+  # - run_name: "geometry-fixedcompute-10k-vicreg-imagenet"
+  #   run_dir: "/workspace/runs/<timestamp>__geometry-fixedcompute-10k-vicreg-imagenet"
+  #   checkpoint_step: 10000
+  #
+  # - run_name: "geometry-fixedcompute-10k-lejepa-seginit"
+  #   run_dir: "/workspace/runs/<timestamp>__geometry-fixedcompute-10k-lejepa-seginit"
+  #   checkpoint_step: 10000
+
+datasets:
+  - dataset_name: "subset6_minus_7_test"
+    root: "/workspace/data/subset6_minus_7_test_flat"
+    split_label: "test"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "subset7_eval"
+    root: "/workspace/data/subset7_eval_224_flat"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "cfc_eval"
+    root: "/workspace/data/cfc_split_eval_224"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+extraction:
+  batch_size: 256
+  num_workers: 4
+  device: "cuda:0"
+  precision: "fp32"
+  overwrite: false
+
+artifact:
+  save_backbone: true
+  save_projected: true
+
+analyses:
+  isotropy:
+    enabled: true
+    num_pairs: 200000
+    seed: 0
+    embedding_keys: ["emb", "proj"]
+
+aggregation:
+  summary_csv: "isotropy_summary_10k.csv"
+  row_keys: ["run_name", "checkpoint_step", "dataset_name", "split_label", "embedding_key"]
