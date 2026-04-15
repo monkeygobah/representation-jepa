@@ -3,7 +3,7 @@ set -u
 
 SIZE_DIR="10k"
 CONFIG_DIR="configs/baselines/$SIZE_DIR"
-GPU_SET="0,1"
+GPU_SET="0,1,2"
 NPROC_PER_NODE=2
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

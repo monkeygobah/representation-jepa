@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -u
 
-SIZE_DIR="100k"
+SIZE_DIR="1m"
 CONFIG_DIR="configs/baselines/$SIZE_DIR"
-GPU_SET="2,3"
+GPU_SET="1,2"
 NPROC_PER_NODE=2
 MASTER_PORT=29501
 
