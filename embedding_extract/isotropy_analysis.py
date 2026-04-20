@@ -141,74 +141,74 @@ def compute_isotropy_metrics(x: torch.Tensor, num_pairs: int = 200_000, seed: in
 # Project-specific runner
 # ----------------------------
 
-def main() -> None:
-    # EDIT THESE PATHS
-    outputs_root = Path(r"C:\local_storage\eccv\embedding_probe\outputs\lejepa-multiview")
-    out_dir = Path(r"C:\local_storage\eccv\embedding_probe\isotropy_out_cfc\lejepa-multiview")
+# def main() -> None:
+#     # EDIT THESE PATHS
+#     outputs_root = Path(r"C:\local_storage\eccv\embedding_probe\outputs\lejepa-multiview")
+#     out_dir = Path(r"C:\local_storage\eccv\embedding_probe\isotropy_out_cfc\lejepa-multiview")
 
-    # Settings
-    dataset_name = "cfc"        # start with training data
-    num_pairs = 200_000
-    seed = 0
+#     # Settings
+#     dataset_name = "cfc"        # start with training data
+#     num_pairs = 200_000
+#     seed = 0
 
-    out_dir.mkdir(parents=True, exist_ok=True)
+#     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Collect files like: outputs/<run_name>/cfc_proj.pt
-    pt_files = sorted(outputs_root.glob(f"*/{dataset_name}_proj.pt"))
-    if not pt_files:
-        raise FileNotFoundError(f"No files found at: {outputs_root}\\*\\{dataset_name}_proj.pt")
+#     # Collect files like: outputs/<run_name>/cfc_proj.pt
+#     pt_files = sorted(outputs_root.glob(f"*/{dataset_name}_proj.pt"))
+#     if not pt_files:
+#         raise FileNotFoundError(f"No files found at: {outputs_root}\\*\\{dataset_name}_proj.pt")
 
-    rows: List[Dict[str, Any]] = []
-    for pt_path in pt_files:
-        run_name = pt_path.parent.name  # e.g., "lejepa-2V-imagenet"
+#     rows: List[Dict[str, Any]] = []
+#     for pt_path in pt_files:
+#         run_name = pt_path.parent.name  # e.g., "lejepa-2V-imagenet"
 
-        x = _load_embeddings(pt_path)
-        m = compute_isotropy_metrics(x, num_pairs=num_pairs, seed=seed)
+#         x = _load_embeddings(pt_path)
+#         m = compute_isotropy_metrics(x, num_pairs=num_pairs, seed=seed)
 
-        m["run"] = run_name
-        m["dataset"] = dataset_name
-        m["pt"] = str(pt_path)
+#         m["run"] = run_name
+#         m["dataset"] = dataset_name
+#         m["pt"] = str(pt_path)
 
-        # Per-run JSON
-        out_json = out_dir / f"{run_name}_{dataset_name}_isotropy.json"
-        with open(out_json, "w", encoding="utf-8") as f:
-            json.dump(m, f, indent=2)
+#         # Per-run JSON
+#         out_json = out_dir / f"{run_name}_{dataset_name}_isotropy.json"
+#         with open(out_json, "w", encoding="utf-8") as f:
+#             json.dump(m, f, indent=2)
 
-        rows.append(m)
+#         rows.append(m)
 
-    # Summary CSV (easy to sort in Excel)
-    summary_csv = out_dir / f"isotropy_summary_{dataset_name}.csv"
-    fieldnames = [
-        "run", "dataset", "pt",
-        "N", "D",
-        "mean_norm",
-        "erank", "erank_over_d",
-        "ev1", "ev5", "ev10", "ev20",
-        "cond_1_med",
-        "cos_mean", "cos_std", "cos_std_expected_sphere",
-        "cos_frac_abs_gt_0.2", "cos_frac_abs_gt_0.3", "cos_frac_abs_gt_0.4",
-        "num_pairs_used",
-    ]
-    with open(summary_csv, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
-        w.writeheader()
-        for r in rows:
-            w.writerow({k: r.get(k, None) for k in fieldnames})
+#     # Summary CSV (easy to sort in Excel)
+#     summary_csv = out_dir / f"isotropy_summary_{dataset_name}.csv"
+#     fieldnames = [
+#         "run", "dataset", "pt",
+#         "N", "D",
+#         "mean_norm",
+#         "erank", "erank_over_d",
+#         "ev1", "ev5", "ev10", "ev20",
+#         "cond_1_med",
+#         "cos_mean", "cos_std", "cos_std_expected_sphere",
+#         "cos_frac_abs_gt_0.2", "cos_frac_abs_gt_0.3", "cos_frac_abs_gt_0.4",
+#         "num_pairs_used",
+#     ]
+#     with open(summary_csv, "w", newline="", encoding="utf-8") as f:
+#         w = csv.DictWriter(f, fieldnames=fieldnames)
+#         w.writeheader()
+#         for r in rows:
+#             w.writerow({k: r.get(k, None) for k in fieldnames})
 
-    # Console: quick ranked view (most isotropic by erank_over_d)
-    rows_sorted = sorted(rows, key=lambda r: r["erank_over_d"], reverse=True)
-    print(f"\n[SUMMARY] {dataset_name} (sorted by erank_over_d desc)\n")
-    for r in rows_sorted:
-        print(
-            f"{r['run']:>20s} | "
-            f"erank/D={r['erank_over_d']:.3f} | "
-            f"ev1={r['ev1']:.3f} | "
-            f"cond_1_med={r['cond_1_med']:.2f} | "
-            f"cos_std={r['cos_std']:.4f} (sphere~{r['cos_std_expected_sphere']:.4f})"
-        )
+#     # Console: quick ranked view (most isotropic by erank_over_d)
+#     rows_sorted = sorted(rows, key=lambda r: r["erank_over_d"], reverse=True)
+#     print(f"\n[SUMMARY] {dataset_name} (sorted by erank_over_d desc)\n")
+#     for r in rows_sorted:
+#         print(
+#             f"{r['run']:>20s} | "
+#             f"erank/D={r['erank_over_d']:.3f} | "
+#             f"ev1={r['ev1']:.3f} | "
+#             f"cond_1_med={r['cond_1_med']:.2f} | "
+#             f"cos_std={r['cos_std']:.4f} (sphere~{r['cos_std_expected_sphere']:.4f})"
+#         )
 
-    print(f"\nWrote: {summary_csv}")
+#     print(f"\nWrote: {summary_csv}")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

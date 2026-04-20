@@ -1,0 +1,70 @@
+run:
+  name: "geometry-fixedcompute-1m-vicreg-imagenet-50ksteps"
+  runs_root: "/workspace/runs"
+  seed: 2026
+  total_steps: 50000
+  warmup_steps: 12500
+  log_every: 100
+  ckpt_every: 10000
+  resume: false
+  resume_ckpt: null
+
+runtime:
+  distributed: "auto"
+  ddp_backend: "nccl"
+  gpu: 0
+
+data:
+  dataset: "subset6_minus_7"
+  train_root: "/workspace/data/subset6_minus_7_train_flat_1_000_000"
+  val_root: "/workspace/data/subset6_minus_7_val_flat"
+  test_root: "/workspace/data/subset6_minus_7_test_flat"
+  external_test_roots:
+    - "/workspace/data/subset7_eval_224_flat"
+    - "/workspace/data/cfc_split_eval_224"
+  image_size: 224
+
+dataloader:
+  batch_size: 128
+  num_workers: 8
+  shuffle: true
+  pin_memory: true
+  drop_last: true
+
+model:
+  backbone: "resnet101"
+  init: "imagenet"
+  seg_ckpt: "/workspace/models/hp_tune.pth"
+  feat_dim: 2048
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3
+
+ssl:
+  method: "vicreg"
+  aug_mode: "local_only"
+  normalize_imagenet: true
+  V: 2
+  crop_size: 112
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7
+
+amp:
+  enabled: true
+  dtype: "bf16"
+
+vicreg:
+  w_inv: 25.0
+  w_var: 25.0
+  w_cov: 1.0
+  var_target: 1.0
+  eps: 1.0e-4
+  gather: true

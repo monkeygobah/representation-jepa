@@ -15,30 +15,6 @@ runs:
     run_dir: "/workspace/runs/20260414_190512__geometry-fixedcompute-10k-infonce-seginit"
     checkpoint_step: 10000
 
-  - run_name: "geometry-fixedcompute-10k-lejepa-imagenet"
-    run_dir: "/workspace/runs/20260415_150932__geometry-fixedcompute-10k-lejepa-imagenet"
-    checkpoint_step: 10000
-
-  - run_name: "geometry-fixedcompute-10k-lejepa-random"
-    run_dir: "/workspace/runs/20260415_034011__geometry-fixedcompute-10k-lejepa-random"
-    checkpoint_step: 10000
-
-  - run_name: "geometry-fixedcompute-10k-lejepa-seginit"
-    run_dir: "/workspace/runs/20260414_205955__geometry-fixedcompute-10k-lejepa-seginit"
-    checkpoint_step: 10000
-
-  - run_name: "geometry-fixedcompute-10k-vicreg-imagenet"
-    run_dir: "/workspace/runs/20260415_160725__geometry-fixedcompute-10k-vicreg-imagenet"
-    checkpoint_step: 10000
-
-  - run_name: "geometry-fixedcompute-10k-vicreg-random"
-    run_dir: "/workspace/runs/20260415_043652__geometry-fixedcompute-10k-vicreg-random"
-    checkpoint_step: 10000
-
-  - run_name: "geometry-fixedcompute-10k-vicreg-seginit"
-    run_dir: "/workspace/runs/20260414_230259__geometry-fixedcompute-10k-vicreg-seginit"
-    checkpoint_step: 10000
-
 datasets:
   - dataset_name: "subset6_minus_7_test"
     root: "/workspace/data/subset6_minus_7_test_flat"

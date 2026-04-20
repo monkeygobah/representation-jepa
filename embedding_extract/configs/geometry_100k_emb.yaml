@@ -74,8 +74,8 @@ analyses:
     enabled: true
     num_pairs: 200000
     seed: 0
-    embedding_keys: ["proj"]
+    embedding_keys: ["emb"]
 
 aggregation:
-  summary_csv: "isotropy_summary_100k.csv"
+  summary_csv: "isotropy_summary_100k_emb.csv"
   row_keys: ["run_name", "checkpoint_step", "dataset_name", "split_label", "embedding_key"]

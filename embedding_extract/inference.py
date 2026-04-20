@@ -23,6 +23,14 @@ def _get_feat_out(y: Any) -> torch.Tensor:
     return y["out"] if isinstance(y, Mapping) else y
 
 
+def _disable_running_stats(model: nn.Module) -> None:
+    for module in model.modules():
+        if isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.SyncBatchNorm)):
+            module.track_running_stats = False
+            module.running_mean = None
+            module.running_var = None
+
+
 def _extract_projector_state(obj_sd: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
     for prefix in ("projector.", "proj."):
         proj_sd = {k[len(prefix):]: v for k, v in obj_sd.items() if k.startswith(prefix)}
@@ -53,8 +61,8 @@ class EmbeddingModel(nn.Module):
         feat = _get_feat_out(self.encoder(x))
         emb = gap_pool(feat)
         proj = self.projector(emb)
-        if self.method == "infonce":
-            proj = F.normalize(proj, dim=1, eps=1e-8)
+        # if self.method == "infonce":
+        #     proj = F.normalize(proj, dim=1, eps=1e-8)
         return {"emb": emb, "proj": proj}
 
 
@@ -65,6 +73,9 @@ def build_inference_bundle(train_cfg: dict[str, Any], checkpoint_path: str | Pat
         init=train_cfg["model"]["init"],
         seg_ckpt=train_cfg["model"].get("seg_ckpt"),
     )
+    # Match the training-time encoder state structure: backbone BatchNorm
+    # running stats were disabled before checkpoints were saved.
+    _disable_running_stats(encoder)
     encoder.load_state_dict(_strip_module_prefix(ckpt["encoder"]), strict=True)
 
     proj_cfg = ProjectorCfg(
