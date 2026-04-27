@@ -1,0 +1,20 @@
+{
+  "study_name": "followup_50k_within_dataset",
+  "task_name": "celeb_within",
+  "run_name": "geometry-fixedcompute-10k-infonce-imagenet-50ksteps",
+  "checkpoint_step": 50000,
+  "embedding_key": "backbone",
+  "pooling": "gap",
+  "embedding_dim": 8,
+  "ssl_method": "infonce",
+  "init_mode": "imagenet",
+  "train_dataset_name": "celeb",
+  "val_dataset_name": "celeb",
+  "test_dataset_name": "celeb",
+  "test_split": "test",
+  "best_epoch": 3,
+  "best_val_mean_l2": 199.0243682861328,
+  "test_mae": 137.83827209472656,
+  "test_mean_l2": 196.48069763183594,
+  "probe_checkpoint_path": "/home/georgie/Desktop/representation-jepa/landmark_probe/outputs/probe_runs/followup_50k_within_dataset/celeb_within/geometry-fixedcompute-10k-infonce-imagenet-50ksteps/backbone__gap/best_probe.pt"
+}

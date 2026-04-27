@@ -1,0 +1,8 @@
+study_cfg: /home/georgie/Desktop/representation-jepa/landmark_probe/configs/studies/followup_50k_within_dataset.yaml
+probe_cfg: /home/georgie/Desktop/representation-jepa/landmark_probe/configs/probes/mlp_default.yaml
+task_name: celeb_within
+run_name: geometry-fixedcompute-10k-infonce-imagenet-50ksteps
+checkpoint_step: 50000
+representation:
+  embedding_key: backbone
+  pooling: gap

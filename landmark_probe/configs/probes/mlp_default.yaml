@@ -1,0 +1,24 @@
+probe:
+  name: "mlp_default"
+  task: "landmark_regression"
+  model_type: "mlp"
+
+model:
+  hidden_dims: [1024, 512]
+  dropout: 0.2
+
+optim:
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+
+train:
+  batch_size: 256
+  num_workers: 4
+  max_epochs: 1000
+  early_stopping:
+    enabled: true
+    patience: 50
+
+selection:
+  metric: "val_mean_l2"
+  mode: "min"
