@@ -14,13 +14,14 @@ python -m pip install --user \
   seaborn \
   nevergrad \
   opencv-python-headless \
-  pyyaml
+  pyyaml \
+  timm==1.0.26
 
 python - <<'PY'
 mods = [
     "numpy", "pandas", "scipy", "imageio", "more_itertools", "skimage",
     "PIL", "sklearn", "pytz", "tzlocal", "seaborn", "matplotlib",
-    "tqdm", "nevergrad", "cv2", "yaml", "torch", "torchvision",
+    "tqdm", "nevergrad", "cv2", "yaml", "timm", "torch", "torchvision",
 ]
 for m in mods:
     __import__(m)

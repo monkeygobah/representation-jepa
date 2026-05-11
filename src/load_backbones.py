@@ -6,9 +6,8 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from torchvision.models import ResNet101_Weights, resnet101
-from torchvision.models.segmentation import deeplabv3_resnet101
-from torchvision.models.segmentation import DeepLabV3_ResNet101_Weights
+
+from src.backbones.vit import VIT_BACKBONES, load_timm_vit_backbone
 
 
 def _ensure_torch_home() -> None:
@@ -33,6 +32,9 @@ def _ensure_torch_home() -> None:
 
 
 def load_segmentation_encoder(ckpt_path="hp_tune.pth"):
+    from torchvision.models.segmentation import DeepLabV3_ResNet101_Weights
+    from torchvision.models.segmentation import deeplabv3_resnet101
+
     model = deeplabv3_resnet101(weights=DeepLabV3_ResNet101_Weights.DEFAULT)
     model.classifier[4] = nn.Conv2d(256, 6, kernel_size=1)
     state = torch.load(ckpt_path, map_location="cpu")
@@ -41,6 +43,8 @@ def load_segmentation_encoder(ckpt_path="hp_tune.pth"):
     return encoder
 
 def load_resnet101_encoder(pretrained: bool = False):
+    from torchvision.models import ResNet101_Weights, resnet101
+
     weights = None
     if pretrained:
         _ensure_torch_home()
@@ -49,7 +53,12 @@ def load_resnet101_encoder(pretrained: bool = False):
     return nn.Sequential(*list(model.children())[:-2])
 
 
-def load_encoder_backbone(init, seg_ckpt=None):
+def load_encoder_backbone(init, seg_ckpt=None, backbone="resnet101"):
+    backbone = "resnet101" if backbone is None else str(backbone)
+    if backbone in VIT_BACKBONES:
+        return load_timm_vit_backbone(backbone=backbone, init=init)
+    if backbone != "resnet101":
+        raise ValueError(f"Unknown encoder backbone: {backbone}")
     if init == "seg_init":
         return load_segmentation_encoder(seg_ckpt)
     if init == "imagenet":

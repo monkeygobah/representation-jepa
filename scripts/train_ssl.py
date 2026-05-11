@@ -174,6 +174,7 @@ def main(args):
         )
 
         encoder = load_encoder_backbone(
+            backbone=cfg["model"].get("backbone", "resnet101"),
             init=cfg["model"]["init"],
             seg_ckpt=cfg["model"].get("seg_ckpt"),
         ).to(device)
