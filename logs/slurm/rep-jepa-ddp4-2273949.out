@@ -1,0 +1,149 @@
+PyTorch conda environment for use with DeltaAI (CUDA 12.9)
+
+Includes: jupyter, jupyterlab, matplotlib, pandas, scipy,
+          scikit-learn, nvitop, mpi4py, tensorboard, wandb
+
+Quick start (on compute node):
+  module load python/miniforge3_pytorch/2.10.0
+  conda activate base
+  python -c "import torch; print(torch.cuda.is_available())"
+
+For Jupyter notebook support (Open OnDemand):
+  setup-kernel
+
+DeltaAI environment loaded
+  DELTA_PROJECT=bhgj
+  DELTA_ACCOUNT=bhgj-dtai-gh
+  DELTA_REPO=/u/gnahass/representation-jepa
+  DELTA_WORK=/work/nvme/bhgj/gnahass/representation-jepa
+Job ID: 2273949
+Node: gh045.hsn.cm.delta.internal.ncsa.edu
+Account: bhgj-dtai-gh
+Partition: ghx4
+Config: configs/delta/smoke_lejepa_vit_b16_multicrop_ddp4.yaml
+Tasks: 4
+Mon May 11 17:03:44 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GH200 120GB             On  |   00000009:01:00.0 Off |                    0 |
+| N/A   17C    P0             94W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GH200 120GB             On  |   00000019:01:00.0 Off |                    0 |
+| N/A   20C    P0             88W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA GH200 120GB             On  |   00000029:01:00.0 Off |                    0 |
+| N/A   20C    P0             85W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA GH200 120GB             On  |   00000039:01:00.0 Off |                    0 |
+| N/A   16C    P0             81W /  900W |       3MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Traceback (most recent call last):
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+Traceback (most recent call last):
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+Traceback (most recent call last):
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+Traceback (most recent call last):
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+    main(ap.parse_args())
+    main(ap.parse_args())
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 149, in main
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 149, in main
+    main(ap.parse_args())
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 149, in main
+    runtime = init_runtime(cfg)
+    runtime = init_runtime(cfg)
+              ^^^^^^^^^^^^^^^^^
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 61, in init_runtime
+    main(ap.parse_args())
+    runtime = init_runtime(cfg)
+              ^^^^^^^^^^^^^^^^^
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 61, in init_runtime
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 149, in main
+              ^^^^^^^^^^^^^^^^^
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 61, in init_runtime
+    dist.init_process_group(backend=backend)
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+    runtime = init_runtime(cfg)
+    dist.init_process_group(backend=backend)
+    dist.init_process_group(backend=backend)
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+              ^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+  File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 61, in init_runtime
+    dist.init_process_group(backend=backend)
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+    return func(*args, **kwargs)
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+    return func(*args, **kwargs)
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+    func_return = func(*args, **kwargs)
+    func_return = func(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1806, in init_process_group
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1806, in init_process_group
+    func_return = func(*args, **kwargs)
+    func_return = func(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1806, in init_process_group
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py", line 1806, in init_process_group
+    store, rank, world_size = next(rendezvous_iterator)
+    store, rank, world_size = next(rendezvous_iterator)
+    store, rank, world_size = next(rendezvous_iterator)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 270, in _env_rendezvous_handler
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 270, in _env_rendezvous_handler
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 270, in _env_rendezvous_handler
+    store, rank, world_size = next(rendezvous_iterator)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 270, in _env_rendezvous_handler
+    rank = int(_get_env_or_raise("RANK"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 255, in _get_env_or_raise
+    rank = int(_get_env_or_raise("RANK"))
+    rank = int(_get_env_or_raise("RANK"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 255, in _get_env_or_raise
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 255, in _get_env_or_raise
+    rank = int(_get_env_or_raise("RANK"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/rendezvous.py", line 255, in _get_env_or_raise
+    raise _env_error(env_var)
+ValueError: Error initializing torch.distributed using env:// rendezvous: environment variable RANK expected, but not set
+    raise _env_error(env_var)
+ValueError: Error initializing torch.distributed using env:// rendezvous: environment variable RANK expected, but not set
+    raise _env_error(env_var)
+    raise _env_error(env_var)
+ValueError: Error initializing torch.distributed using env:// rendezvous: environment variable RANK expected, but not set
+ValueError: Error initializing torch.distributed using env:// rendezvous: environment variable RANK expected, but not set
+srun: error: gh045: tasks 0-3: Exited with exit code 1

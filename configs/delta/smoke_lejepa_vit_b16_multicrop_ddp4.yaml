@@ -16,7 +16,7 @@ runtime:
 
 data:
   dataset: "subset6_minus_7"
-  train_root: "/work/nvme/bhgj/gnahass/representation-jepa/data/subset6_minus_7_train_flat"
+  train_root: "/work/nvme/bhgj/gnahass/representation-jepa/data/smoke_subset6_minus_7_train_flat"
   val_root: null
   test_root: null
   external_test_roots: []
@@ -24,7 +24,7 @@ data:
 
 dataloader:
   batch_size: 8
-  num_workers: 4
+  num_workers: 0
   shuffle: true
   pin_memory: true
   drop_last: true
