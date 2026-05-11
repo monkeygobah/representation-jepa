@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from landmark_probe.constants import VALID_POOLING
+from landmark_probe.constants import POOL_G4, REPRESENTATION_PATCH_TOKENS, VALID_EXTERNAL_MODELS, VALID_POOLING
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_ROOT = Path("/workspace")
@@ -50,6 +50,8 @@ class DatasetMetadataSpec:
     manifest_csv: Path
     landmarks_csv: Path
     split_csv: Path
+    failures_csv: Path
+    summary_csv: Path
 
 
 @dataclass(frozen=True)
@@ -95,9 +97,13 @@ class ProbeConfig:
 @dataclass(frozen=True)
 class RunSpec:
     run_name: str
-    run_dir: Path
+    run_dir: Path | None
     checkpoint_step: int
     checkpoint_path: Path | None = None
+    baseline_init: str | None = None
+    baseline_seed: int = 0
+    baseline_seg_ckpt: Path | None = None
+    external_model: str | None = None
 
 
 @dataclass(frozen=True)
@@ -189,6 +195,8 @@ def load_dataset_config(path: str | Path) -> DatasetSpec:
         manifest_csv=root / _require(metadata_raw.get("manifest_csv"), "metadata.manifest_csv"),
         landmarks_csv=root / _require(metadata_raw.get("landmarks_csv"), "metadata.landmarks_csv"),
         split_csv=root / _require(metadata_raw.get("split_csv"), "metadata.split_csv"),
+        failures_csv=root / str(metadata_raw.get("failures_csv", "metadata/prep_failures.csv")),
+        summary_csv=root / str(metadata_raw.get("summary_csv", "metadata/prep_summary.csv")),
     )
 
     split_raw = raw.get("splits", {})
@@ -286,10 +294,14 @@ def load_study_config(path: str | Path) -> StudyConfig:
         raise ValueError("Study config must define runs")
     runs = tuple(
         RunSpec(
-            run_name=str(item.get("run_name") or Path(_require(item.get("run_dir"), "runs[].run_dir")).name),
-            run_dir=_resolve_path(base_dir, _require(item.get("run_dir"), "runs[].run_dir")),
-            checkpoint_step=int(_require(item.get("checkpoint_step"), "runs[].checkpoint_step")),
+            run_name=str(item.get("run_name") or item.get("external_model") or Path(_require(item.get("run_dir"), "runs[].run_dir")).name),
+            run_dir=_resolve_path(base_dir, item.get("run_dir")),
+            checkpoint_step=int(item.get("checkpoint_step", 0)),
             checkpoint_path=_resolve_path(base_dir, item.get("checkpoint_path")),
+            baseline_init=str(item["baseline_init"]) if item.get("baseline_init") is not None else None,
+            baseline_seed=int(item.get("baseline_seed", 0)),
+            baseline_seg_ckpt=_resolve_path(base_dir, item.get("baseline_seg_ckpt")),
+            external_model=str(item["external_model"]) if item.get("external_model") is not None else None,
         )
         for item in runs_raw
     )
@@ -357,6 +369,30 @@ def validate_study_config(cfg: StudyConfig) -> None:
     if not cfg.probe_cfg_path.exists():
         raise FileNotFoundError(f"Probe config does not exist: {cfg.probe_cfg_path}")
     for run in cfg.runs:
+        if run.external_model is not None:
+            if run.external_model not in VALID_EXTERNAL_MODELS:
+                raise ValueError(f"Unsupported external_model for run {run.run_name}: {run.external_model}")
+            if run.run_dir is not None or run.baseline_init is not None:
+                raise ValueError(f"External model run {run.run_name} cannot define run_dir or baseline_init")
+            if run.checkpoint_step != 0:
+                raise ValueError(f"External model run {run.run_name} must use checkpoint_step 0")
+            for representation in cfg.representations:
+                if representation.embedding_key != REPRESENTATION_PATCH_TOKENS or representation.pooling != POOL_G4:
+                    raise ValueError(
+                        f"External model run {run.run_name} requires patch_tokens/g4, got "
+                        f"{representation.embedding_key}/{representation.pooling}"
+                    )
+            continue
+        if run.baseline_init is not None:
+            if run.run_dir is not None:
+                raise ValueError(f"Baseline run {run.run_name} cannot define run_dir")
+            if run.baseline_init not in {"random", "imagenet", "seg_init"}:
+                raise ValueError(f"Unsupported baseline_init for run {run.run_name}: {run.baseline_init}")
+            if run.baseline_init == "seg_init" and run.baseline_seg_ckpt is not None and not run.baseline_seg_ckpt.exists():
+                raise FileNotFoundError(f"Baseline segmentation checkpoint missing: {run.baseline_seg_ckpt}")
+            continue
+        if run.run_dir is None:
+            raise ValueError(f"Run {run.run_name} must define run_dir unless baseline_init is set")
         if not run.run_dir.exists():
             raise FileNotFoundError(f"Run directory does not exist: {run.run_dir}")
         if not (run.run_dir / "config.yaml").exists():

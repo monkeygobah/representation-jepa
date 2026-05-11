@@ -10,3 +10,6 @@ embedding_extract/all_pts_to_analyze/
 Dockerfile
 segmentation/
 ...
+landmark_probe/outputs/embeddings/
+landmark_probe/_deprecated/
+landmark_probe/outputs/

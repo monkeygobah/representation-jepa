@@ -9,6 +9,7 @@ import yaml
 
 from landmark_probe.config import DatasetSpec, ProbeConfig, RepresentationSpec, RunSpec, StudyConfig, TaskSpec
 from landmark_probe.constants import LANDMARK_KEYS
+from landmark_probe.extract.inference import expected_embedding_dim
 from landmark_probe.paths import embedding_artifact_path, probe_run_dir
 from landmark_probe.probe.datasets import build_dataloader, build_probe_dataset, load_embedding_payload
 from landmark_probe.probe.metrics import mean_l2_per_landmark, per_landmark_stats, per_sample_mean_l2
@@ -106,8 +107,23 @@ def run_probe_for_target(
             raise FileNotFoundError(f"Embedding artifact missing: {path}")
     train_payload = load_embedding_payload(train_path)
     train_cfg = train_payload.get("train_cfg", {})
-    ssl_method = str(train_cfg.get("ssl", {}).get("method", "unknown"))
-    init_mode = str(train_cfg.get("model", {}).get("init", "unknown"))
+    model_cfg = train_cfg.get("model", {})
+    ssl_method = str(train_payload.get("ssl_method", train_cfg.get("ssl", {}).get("method", "unknown")))
+    init_mode = str(train_payload.get("init_mode", model_cfg.get("init", "unknown")))
+    external_metadata = {
+        "model_family": train_payload.get("model_family", model_cfg.get("model_family")),
+        "model_arch": train_payload.get("model_arch", model_cfg.get("model_arch")),
+        "patch_size": train_payload.get("patch_size", model_cfg.get("patch_size")),
+        "pretrain_data": train_payload.get("pretrain_data", model_cfg.get("pretrain_data")),
+        "feature_kind": train_payload.get("feature_kind", model_cfg.get("feature_kind")),
+    }
+    expected_dim = expected_embedding_dim(train_cfg, representation.pooling)
+    observed_dim = int(train_payload["embeddings"].shape[1])
+    if observed_dim != expected_dim:
+        raise ValueError(
+            f"Embedding dim mismatch at {train_path}: got {observed_dim}, expected {expected_dim}. "
+            "Re-run landmark extraction with overwrite enabled."
+        )
 
     train_ds = build_probe_dataset(dataset_cfg, train_path, task.train_split)
     val_ds = build_probe_dataset(dataset_cfg, val_path, task.val_split)
@@ -183,6 +199,7 @@ def run_probe_for_target(
             "embedding_dim": in_dim,
             "ssl_method": ssl_method,
             "init_mode": init_mode,
+            **external_metadata,
         },
         best_ckpt_path,
     )
@@ -215,6 +232,7 @@ def run_probe_for_target(
         "embedding_dim": in_dim,
         "ssl_method": ssl_method,
         "init_mode": init_mode,
+        **external_metadata,
         "train_dataset_name": task.train_split.dataset_name,
         "val_dataset_name": task.val_split.dataset_name,
         "test_dataset_name": task.test_split.dataset_name,
@@ -241,13 +259,36 @@ def run_probe_for_target(
                 "embedding_dim": in_dim,
                 "ssl_method": ssl_method,
                 "init_mode": init_mode,
+                **external_metadata,
                 "best_epoch": best_epoch,
                 "best_val_mean_l2": best_val,
             }
         )
     pd.DataFrame(per_landmark_rows).to_csv(out_dir / "per_landmark.csv", index=False)
 
-    per_sample_df = pd.DataFrame({"sample_id": sample_ids, "mean_l2": per_sample_l2.numpy()})
+    per_sample_rows = []
+    y_true_np = y_true.numpy()
+    y_pred_np = y_pred.numpy()
+    per_sample_l2_np = per_sample_l2.numpy()
+    for row_idx, sample_id in enumerate(sample_ids):
+        row = {"sample_id": sample_id, "mean_l2": float(per_sample_l2_np[row_idx])}
+        for landmark_idx, landmark in enumerate(dataset_cfg.landmarks):
+            base = 2 * landmark_idx
+            true_x = float(y_true_np[row_idx, base])
+            true_y = float(y_true_np[row_idx, base + 1])
+            pred_x = float(y_pred_np[row_idx, base])
+            pred_y = float(y_pred_np[row_idx, base + 1])
+            err_x = pred_x - true_x
+            err_y = pred_y - true_y
+            row[f"{landmark}_true_x"] = true_x
+            row[f"{landmark}_true_y"] = true_y
+            row[f"{landmark}_pred_x"] = pred_x
+            row[f"{landmark}_pred_y"] = pred_y
+            row[f"{landmark}_err_x"] = err_x
+            row[f"{landmark}_err_y"] = err_y
+            row[f"{landmark}_l2"] = float((err_x**2 + err_y**2) ** 0.5)
+        per_sample_rows.append(row)
+    per_sample_df = pd.DataFrame(per_sample_rows)
     per_sample_df.to_csv(out_dir / "per_sample.csv", index=False)
     return out_dir
 
@@ -259,7 +300,3 @@ def run_probe_study(study_cfg: StudyConfig, dataset_cfg: DatasetSpec, probe_cfg:
             for representation in study_cfg.representations:
                 written.append(run_probe_for_target(study_cfg, dataset_cfg, probe_cfg, task, run, representation))
     return written
-    train_payload = load_embedding_payload(train_path)
-    train_cfg = train_payload.get("train_cfg", {})
-    ssl_method = str(train_cfg.get("ssl", {}).get("method", "unknown"))
-    init_mode = str(train_cfg.get("model", {}).get("init", "unknown"))

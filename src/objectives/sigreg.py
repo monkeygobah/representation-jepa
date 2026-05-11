@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn as nn
 
@@ -58,3 +60,119 @@ class SIGReg(nn.Module):
         statistic = (err @ weights) * float(N)                     # (S,)
 
         return statistic.mean()
+
+
+class EPPartial(nn.Module):
+    """
+    Three-term sliced Epps-Pulley partial statistic.
+
+    For each random unit direction, project x in R^K to a scalar X and compute
+
+        (E[e^-X^2/2] - 1/sqrt(2))^2
+        + E[X e^-X^2/2]^2
+        + 1/2 * (E[X^2 e^-X^2/2] - 1/(2sqrt(2)))^2.
+
+    Inputs follow SIGReg: either (N, K) or (A, B, K), with the latter flattened
+    across the first two axes before slicing.
+    """
+
+    def __init__(self, num_slices: int = 256, scale_by_n: bool = False):
+        super().__init__()
+        self.num_slices = int(num_slices)
+        self.scale_by_n = bool(scale_by_n)
+
+        inv_sqrt_2 = 1.0 / math.sqrt(2.0)
+        self.register_buffer("d0", torch.tensor(inv_sqrt_2, dtype=torch.float32))
+        self.register_buffer("d2", torch.tensor(0.5 * inv_sqrt_2, dtype=torch.float32))
+
+    def forward(self, proj: torch.Tensor) -> torch.Tensor:
+        if proj.ndim == 3:
+            N = proj.shape[0] * proj.shape[1]
+            K = proj.shape[2]
+            x = proj.reshape(N, K)
+        elif proj.ndim == 2:
+            x = proj
+            N, K = x.shape
+        else:
+            raise ValueError("proj must have shape (N,K) or (A,B,K)")
+
+        device = x.device
+        dtype = x.dtype
+
+        A = torch.randn(K, self.num_slices, device=device, dtype=dtype)
+        A = A / (A.norm(p=2, dim=0, keepdim=True) + 1e-12)
+
+        xA = x @ A                                                  # (N, S)
+        envelope = torch.exp(-0.5 * xA.square())                    # E
+
+        c0 = envelope.mean(dim=0)                                   # (S,)
+        c1 = (envelope * xA).mean(dim=0)                            # (S,)
+        c2 = (envelope * xA.square()).mean(dim=0)                   # (S,)
+
+        d0 = self.d0.to(device=device, dtype=dtype)
+        d2 = self.d2.to(device=device, dtype=dtype)
+
+        statistic = (c0 - d0).square() + c1.square() + 0.5 * (c2 - d2).square()
+        if self.scale_by_n:
+            statistic = statistic * float(N)
+
+        return statistic.mean()
+
+
+class BHEP(nn.Module):
+    """
+    Direct multivariate Baringhaus-Henze-Epps-Pulley statistic.
+
+    This computes the closed-form Gaussian-kernel discrepancy between empirical
+    samples x in R^K and a standard normal target:
+
+        mean_ij exp(-||x_i - x_j||^2 / (2 beta^2))
+        - 2 (1 + beta^2)^(-K/2) mean_i exp(-||x_i||^2 / (2(1 + beta^2)))
+        + (1 + 2 beta^2)^(-K/2).
+
+    Inputs follow SIGReg: either (N, K) or (A, B, K), with the latter flattened
+    across the first two axes.
+    """
+
+    def __init__(self, beta: float = 1.0, scale_by_n: bool = False):
+        super().__init__()
+        if beta <= 0.0:
+            raise ValueError("beta must be positive")
+        self.beta = float(beta)
+        self.scale_by_n = bool(scale_by_n)
+
+    def forward(self, proj: torch.Tensor) -> torch.Tensor:
+        if proj.ndim == 3:
+            N = proj.shape[0] * proj.shape[1]
+            K = proj.shape[2]
+            x = proj.reshape(N, K)
+        elif proj.ndim == 2:
+            x = proj
+            N, K = x.shape
+        else:
+            raise ValueError("proj must have shape (N,K) or (A,B,K)")
+
+        if x.dtype in (torch.float16, torch.bfloat16):
+            x = x.float()
+
+        beta2 = self.beta * self.beta
+
+        squared_norm = x.square().sum(dim=1, keepdim=True)          # (N, 1)
+        dist2 = squared_norm - 2.0 * (x @ x.T) + squared_norm.T     # (N, N)
+        dist2 = dist2.clamp_min(0.0)
+
+        term1 = torch.exp(-dist2 / (2.0 * beta2)).mean()
+
+        cross_scale = x.new_tensor(math.exp(-0.5 * K * math.log1p(beta2)))
+        cross_kernel = torch.exp(
+            -squared_norm.squeeze(1) / (2.0 * (1.0 + beta2))
+        ).mean()
+        term2 = 2.0 * cross_scale * cross_kernel
+
+        target_term = x.new_tensor(math.exp(-0.5 * K * math.log1p(2.0 * beta2)))
+
+        statistic = term1 - term2 + target_term
+        if self.scale_by_n:
+            statistic = statistic * float(N)
+
+        return statistic

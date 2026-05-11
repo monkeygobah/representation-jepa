@@ -1,0 +1,39 @@
+{
+  "preset": "rep_learning",
+  "filters": {
+    "exclude_seginit": true,
+    "inits": [
+      "random",
+      "imagenet"
+    ],
+    "dataset_objectives": [
+      "infonce",
+      "vicreg",
+      "lejepa"
+    ],
+    "representation_objectives": [
+      "lejepa",
+      "bhep",
+      "eppartial"
+    ]
+  },
+  "tables": [
+    "/workspace/outputs/paper_figures/rep_learning/tables/rep_learning_training_metrics_plot_ready.csv",
+    "/workspace/outputs/paper_figures/rep_learning/tables/rep_learning_geometry_plot_ready.csv",
+    "/workspace/outputs/paper_figures/rep_learning/tables/rep_learning_landmark_g4_plot_ready.csv"
+  ],
+  "figures": [
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_loss.png",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_loss.pdf",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_loss.svg",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_components.png",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_components.pdf",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_training_components.svg",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_geometry_erank_over_d.png",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_geometry_erank_over_d.pdf",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_geometry_erank_over_d.svg",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_landmark_g4_within.png",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_landmark_g4_within.pdf",
+    "/workspace/outputs/paper_figures/rep_learning/figures/rep_learning_landmark_g4_within.svg"
+  ]
+}

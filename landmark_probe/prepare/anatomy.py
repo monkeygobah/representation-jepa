@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-import re
 from typing import Any
 
 import numpy as np
@@ -15,12 +14,24 @@ from segmentation.build_dataset.periorbital_tools.find_anatomy_from_masks import
 @dataclass(frozen=True)
 class EyeCropSample:
     sample_id: str
+    source_id: str
     dataset_name: str
     anatomical_side: str
     image_name: str
     image_rel_path: str
     image: Image.Image
     landmarks: dict[str, float]
+
+
+@dataclass(frozen=True)
+class EyeCropFailure:
+    source_id: str
+    sample_id: str
+    dataset_name: str
+    anatomical_side: str
+    image_path: str
+    mask_path: str
+    reason: str
 
 
 def extract_and_split_masks(combined_prediction: np.ndarray) -> dict[str, np.ndarray]:
@@ -144,12 +155,28 @@ def landmark_row(sample_id: str, dataset_name: str, landmark_values: dict[str, t
     return row
 
 
-def build_eye_samples(
+def _values_from_landmark_row(row: dict[str, float | str]) -> dict[str, float]:
+    return {k: float(v) for k, v in row.items() if k not in {"sample_id", "dataset_name"}}
+
+
+def _invalid_landmark_columns(values: dict[str, float], out_size: int) -> list[str]:
+    invalid = []
+    for key, value in values.items():
+        if np.isnan(value):
+            invalid.append(f"{key}=nan")
+        elif value < 0.0 or value > float(out_size):
+            invalid.append(f"{key}={value:.6g}")
+    return sorted(invalid)
+
+
+def build_eye_samples_with_failures(
     dataset_name: str,
     image_path: Path,
     mask_path: Path,
     out_size: int,
-) -> tuple[EyeCropSample, EyeCropSample] | None:
+) -> tuple[list[EyeCropSample], list[EyeCropFailure]]:
+    source_id = sample_prefix_from_stem(image_path.stem, dataset_name)
+
     image = Image.open(image_path).convert("RGB")
     mask = Image.open(mask_path)
     mask_arr = np.array(mask)
@@ -157,9 +184,21 @@ def build_eye_samples(
     extractor = EyeFeatureExtractor(predictions, mask)
     landmarks_full, *_ = extractor.extract_features()
     if landmarks_full is None:
-        return None
+        failures = [
+            EyeCropFailure(
+                source_id=source_id,
+                sample_id=f"{source_id}_{side}",
+                dataset_name=dataset_name,
+                anatomical_side=side,
+                image_path=str(image_path),
+                mask_path=str(mask_path),
+                reason="landmark_extraction_returned_none",
+            )
+            for side in ("l", "r")
+        ]
+        return [], failures
 
-    left_img, right_img = crop_and_resize_pair(image, size=out_size, is_mask=False)
+    viewer_left_img, viewer_right_img = crop_and_resize_pair(image, size=out_size, is_mask=False)
     left_landmarks_raw, right_landmarks_raw = split_landmarks_to_eye(
         landmarks_full,
         width=image.width,
@@ -169,32 +208,52 @@ def build_eye_samples(
     left_landmarks = _canon_eye_landmarks(left_landmarks_raw)
     right_landmarks = _canon_eye_landmarks(right_landmarks_raw)
 
-    prefix = sample_prefix_from_stem(image_path.stem, dataset_name)
-    left_name = f"{prefix}_l.jpg"
-    right_name = f"{prefix}_r.jpg"
-    left_row = landmark_row(f"{prefix}_l", dataset_name, left_landmarks)
-    right_row = landmark_row(f"{prefix}_r", dataset_name, right_landmarks)
-    left_values = {k: float(v) for k, v in left_row.items() if k not in {"sample_id", "dataset_name"}}
-    right_values = {k: float(v) for k, v in right_row.items() if k not in {"sample_id", "dataset_name"}}
-    if any(np.isnan(list(left_values.values()))) or any(np.isnan(list(right_values.values()))):
-        return None
+    samples: list[EyeCropSample] = []
+    failures: list[EyeCropFailure] = []
+    for side, eye_image, landmark_values in (
+        ("l", viewer_right_img, left_landmarks),
+        ("r", viewer_left_img, right_landmarks),
+    ):
+        sample_id = f"{source_id}_{side}"
+        image_name = f"{sample_id}.jpg"
+        row = landmark_row(sample_id, dataset_name, landmark_values)
+        values = _values_from_landmark_row(row)
+        invalid = _invalid_landmark_columns(values, out_size)
+        if invalid:
+            failures.append(
+                EyeCropFailure(
+                    source_id=source_id,
+                    sample_id=sample_id,
+                    dataset_name=dataset_name,
+                    anatomical_side=side,
+                    image_path=str(image_path),
+                    mask_path=str(mask_path),
+                    reason="invalid_landmarks:" + ",".join(invalid),
+                )
+            )
+            continue
+        samples.append(
+            EyeCropSample(
+                sample_id=sample_id,
+                source_id=source_id,
+                dataset_name=dataset_name,
+                anatomical_side=side,
+                image_name=image_name,
+                image_rel_path=f"{dataset_name}/images/{image_name}",
+                image=eye_image,
+                landmarks=values,
+            )
+        )
+    return samples, failures
 
-    left_sample = EyeCropSample(
-        sample_id=f"{prefix}_l",
-        dataset_name=dataset_name,
-        anatomical_side="l",
-        image_name=left_name,
-        image_rel_path=f"{dataset_name}/images/{left_name}",
-        image=left_img,
-        landmarks=left_values,
-    )
-    right_sample = EyeCropSample(
-        sample_id=f"{prefix}_r",
-        dataset_name=dataset_name,
-        anatomical_side="r",
-        image_name=right_name,
-        image_rel_path=f"{dataset_name}/images/{right_name}",
-        image=right_img,
-        landmarks=right_values,
-    )
-    return left_sample, right_sample
+
+def build_eye_samples(
+    dataset_name: str,
+    image_path: Path,
+    mask_path: Path,
+    out_size: int,
+) -> tuple[EyeCropSample, EyeCropSample] | None:
+    samples, _ = build_eye_samples_with_failures(dataset_name, image_path, mask_path, out_size)
+    if len(samples) != 2:
+        return None
+    return samples[0], samples[1]

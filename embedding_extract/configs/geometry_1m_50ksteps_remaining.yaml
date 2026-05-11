@@ -1,0 +1,73 @@
+study:
+  name: "geometry_1m_50ksteps"
+  output_root: "/workspace/embedding_extract/outputs"
+
+runs:
+  - run_name: "geometry-fixedcompute-1m-infonce-seginit-50ksteps"
+    run_dir: "/workspace/runs/20260424_021247__geometry-fixedcompute-1m-infonce-seginit-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-lejepa-imagenet-50ksteps"
+    run_dir: "/workspace/runs/20260418_210453__geometry-fixedcompute-1m-lejepa-imagenet-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-lejepa-random-50ksteps"
+    run_dir: "/workspace/runs/20260422_163700__geometry-fixedcompute-1m-lejepa-random-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-lejepa-seginit-50ksteps"
+    run_dir: "/workspace/runs/20260424_135115__geometry-fixedcompute-1m-lejepa-seginit-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-vicreg-imagenet-50ksteps"
+    run_dir: "/workspace/runs/20260419_003347__geometry-fixedcompute-1m-vicreg-imagenet-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-vicreg-random-50ksteps"
+    run_dir: "/workspace/runs/20260422_225927__geometry-fixedcompute-1m-vicreg-random-50ksteps"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-1m-vicreg-seginit-50ksteps"
+    run_dir: "/workspace/runs/20260425_013352__geometry-fixedcompute-1m-vicreg-seginit-50ksteps"
+    checkpoint_step: 50000
+
+datasets:
+  - dataset_name: "subset6_minus_7_test"
+    root: "/workspace/data/subset6_minus_7_test_flat"
+    split_label: "test"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "subset7_eval"
+    root: "/workspace/data/subset7_eval_224_flat"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "cfc_eval"
+    root: "/workspace/data/cfc_split_eval_224"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+extraction:
+  batch_size: 256
+  num_workers: 4
+  device: "cuda:0"
+  precision: "fp32"
+  overwrite: false
+
+artifact:
+  save_backbone: true
+  save_projected: true
+
+analyses:
+  isotropy:
+    enabled: true
+    num_pairs: 200000
+    seed: 0
+    embedding_keys: ["proj"]
+
+aggregation:
+  summary_csv: "isotropy_summary_1m_50ksteps.csv"
+  row_keys: ["run_name", "checkpoint_step", "dataset_name", "split_label", "embedding_key"]

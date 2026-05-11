@@ -37,8 +37,10 @@ LEFT_KEYS: tuple[str, ...] = (
 )
 
 REPRESENTATION_BACKBONE = "backbone"
+REPRESENTATION_PATCH_TOKENS = "patch_tokens"
 POOL_GAP = "gap"
 POOL_G2 = "g2"
 POOL_G4 = "g4"
 VALID_POOLING = (POOL_GAP, POOL_G2, POOL_G4)
 VALID_SPLITS = ("train", "val", "test")
+VALID_EXTERNAL_MODELS = ("dinov2_vitb14", "mae_vitb16_in1k_pretrain")

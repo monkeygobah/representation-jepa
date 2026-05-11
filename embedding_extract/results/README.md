@@ -6,4 +6,5 @@ Suggested layout:
 - `data/`: combined and reshaped CSV tables used for plotting
 - `figures/`: rendered plots for inspection and manuscript development
 
-The plotting entrypoint lives at `scripts/plot_embedding_results.py`.
+The active embedding-geometry plotting entrypoint lives at
+`scripts/embedding_probe/plot_embedding_results.py`.

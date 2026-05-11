@@ -1,0 +1,40 @@
+{
+  "preset": "dataset_track",
+  "filters": {
+    "exclude_seginit": true,
+    "inits": [
+      "random",
+      "imagenet"
+    ],
+    "dataset_objectives": [
+      "infonce",
+      "vicreg",
+      "lejepa"
+    ],
+    "representation_objectives": [
+      "lejepa",
+      "bhep",
+      "eppartial"
+    ]
+  },
+  "tables": [
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_resource_summary.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_training_metrics_plot_ready.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_geometry_plot_ready.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_plot_ready.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_baselines.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_external_baselines.csv"
+  ],
+  "figures": [
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_resource_summary.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_benchmark_schematic.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_training_curves.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_erank_over_d.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_ev1.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_ev5.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_ev20.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_cos_std.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_cond_1_med.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_landmark_g4_within.png"
+  ]
+}

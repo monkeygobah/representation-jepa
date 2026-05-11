@@ -62,10 +62,15 @@ ssl:
   local_scale_max: 0.3
 
 loss:
-  # LeJEPA / SIGReg settings
+  # LeJEPA regularizer settings
   lamb: 0.05
+  regularizer: "sigreg"    # "sigreg" | "ep_partial" | "bhep"
   sigreg_knots: 17
   sigreg_num_slices: 256
+  ep_partial_num_slices: 256
+  ep_partial_scale_by_n: false
+  bhep_beta: 1.0
+  bhep_scale_by_n: false
 
 optim:
   lr: 5.0e-4

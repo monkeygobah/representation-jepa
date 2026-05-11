@@ -7,7 +7,6 @@ import pandas as pd
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
 
 from landmark_probe.config import DatasetSpec, ExtractionSpec, TaskSplitSpec
 
@@ -23,6 +22,8 @@ class ImageRecord:
 
 class ProbeImageDataset(Dataset):
     def __init__(self, root: Path, records: list[ImageRecord], image_size: int, normalize_imagenet: bool):
+        from torchvision import transforms
+
         self.root = root
         self.records = records
         ops: list[object] = [

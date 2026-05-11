@@ -26,6 +26,7 @@ def main() -> None:
         max_samples_per_dataset=args.max_samples_per_dataset,
     )
     print(f"Wrote prepared dataset metadata:\n- {manifest}\n- {landmarks}\n- {splits}")
+    print(f"Wrote preparation QC:\n- {cfg.metadata.failures_csv}\n- {cfg.metadata.summary_csv}")
 
 
 if __name__ == "__main__":

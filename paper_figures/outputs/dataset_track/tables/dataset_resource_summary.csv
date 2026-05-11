@@ -1,0 +1,10 @@
+resource_name,role,source_type,label_availability,public_release_status,redistribution_status,sample_count,used_for_pretraining,used_for_evaluation
+Main external-eye corpus,Unlabeled master corpus,Open-source face datasets,Unlabeled,Partial,Mixed,4352692,True,False
+Pretrain-10K,SSL pretraining subset,Main external-eye corpus,Unlabeled,Derived,Mixed,10000,True,False
+Pretrain-100K,SSL pretraining subset,Main external-eye corpus,Unlabeled,Derived,Mixed,100000,True,False
+Pretrain-1M,SSL pretraining subset,Main external-eye corpus,Unlabeled,Derived,Mixed,1000000,True,False
+Source-Holdout,Source-matched geometry evaluation,Open-source face datasets,Unlabeled,Partial,Mixed,421730,False,True
+Open-HR,High-resolution open-source geometry evaluation,Open-source face datasets,Unlabeled,Partial,Mixed,134969,False,True
+Clinic-CF,Clinical domain-shift geometry evaluation,Clinical repository,Unlabeled,No,Restricted,35082,False,True
+Landmark-Celeb,Within-dataset and transfer probe source,Open-source periocular annotations,9 landmark coordinates,Yes,Permitted,3610,False,True
+Landmark-CFD,Within-dataset and transfer probe target,Open-source periocular annotations,9 landmark coordinates,Yes,Permitted,1596,False,True
