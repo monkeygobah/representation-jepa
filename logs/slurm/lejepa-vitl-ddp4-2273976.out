@@ -1,0 +1,137 @@
+PyTorch conda environment for use with DeltaAI (CUDA 12.9)
+
+Includes: jupyter, jupyterlab, matplotlib, pandas, scipy,
+          scikit-learn, nvitop, mpi4py, tensorboard, wandb
+
+Quick start (on compute node):
+  module load python/miniforge3_pytorch/2.10.0
+  conda activate base
+  python -c "import torch; print(torch.cuda.is_available())"
+
+For Jupyter notebook support (Open OnDemand):
+  setup-kernel
+
+DeltaAI environment loaded
+  DELTA_PROJECT=bhgj
+  DELTA_ACCOUNT=bhgj-dtai-gh
+  DELTA_REPO=/u/gnahass/representation-jepa
+  DELTA_WORK=/work/nvme/bhgj/gnahass/representation-jepa
+Job ID: 2273976
+Node: gh110.hsn.cm.delta.internal.ncsa.edu
+Account: bhgj-dtai-gh
+Partition: ghx4
+Config: configs/delta/train_lejepa_vit_l16_multicrop_ddp4_b32.yaml
+Tasks: 4
+MASTER_ADDR: gh110
+MASTER_PORT: 29500
+Mon May 11 17:16:55 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GH200 120GB             On  |   00000009:01:00.0 Off |                    0 |
+| N/A   23C    P0             98W /  900W |       3MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GH200 120GB             On  |   00000019:01:00.0 Off |                    0 |
+| N/A   24C    P0             79W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA GH200 120GB             On  |   00000029:01:00.0 Off |                    0 |
+| N/A   24C    P0             83W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA GH200 120GB             On  |   00000039:01:00.0 Off |                    0 |
+| N/A   24C    P0             98W /  900W |       2MiB /  97871MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+[rank0]:     main(ap.parse_args())
+[rank0]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 161, in main
+[rank0]:     ds = build_dataset(cfg=cfg, transform=transform, root_key="train_root")
+[rank0]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 124, in build_dataset
+[rank0]:     return ManifestImageDataset(
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 73, in __init__
+[rank0]:     self.samples = self._index()
+[rank0]:                    ^^^^^^^^^^^^^
+[rank0]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 77, in _index
+[rank0]:     with self.manifest.open("r") as f:
+[rank0]:          ^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/pathlib.py", line 1013, in open
+[rank0]:     return io.open(self, mode, buffering, encoding, errors, newline)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]: FileNotFoundError: [Errno 2] No such file or directory: '/work/nvme/bhgj/gnahass/representation-jepa/data/manifests/subset6_minus_7_train_flat.txt'
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+[rank2]:     main(ap.parse_args())
+[rank2]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 161, in main
+[rank2]:     ds = build_dataset(cfg=cfg, transform=transform, root_key="train_root")
+[rank2]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 124, in build_dataset
+[rank2]:     return ManifestImageDataset(
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 73, in __init__
+[rank2]:     self.samples = self._index()
+[rank2]:                    ^^^^^^^^^^^^^
+[rank2]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 77, in _index
+[rank2]:     with self.manifest.open("r") as f:
+[rank2]:          ^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/pathlib.py", line 1013, in open
+[rank2]:     return io.open(self, mode, buffering, encoding, errors, newline)
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]: FileNotFoundError: [Errno 2] No such file or directory: '/work/nvme/bhgj/gnahass/representation-jepa/data/manifests/subset6_minus_7_train_flat.txt'
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+[rank3]:     main(ap.parse_args())
+[rank3]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 161, in main
+[rank3]:     ds = build_dataset(cfg=cfg, transform=transform, root_key="train_root")
+[rank3]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 124, in build_dataset
+[rank3]:     return ManifestImageDataset(
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 73, in __init__
+[rank3]:     self.samples = self._index()
+[rank3]:                    ^^^^^^^^^^^^^
+[rank3]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 77, in _index
+[rank3]:     with self.manifest.open("r") as f:
+[rank3]:          ^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/pathlib.py", line 1013, in open
+[rank3]:     return io.open(self, mode, buffering, encoding, errors, newline)
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]: FileNotFoundError: [Errno 2] No such file or directory: '/work/nvme/bhgj/gnahass/representation-jepa/data/manifests/subset6_minus_7_train_flat.txt'
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 331, in <module>
+[rank1]:     main(ap.parse_args())
+[rank1]:   File "/u/gnahass/representation-jepa/scripts/train_ssl.py", line 161, in main
+[rank1]:     ds = build_dataset(cfg=cfg, transform=transform, root_key="train_root")
+[rank1]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 124, in build_dataset
+[rank1]:     return ManifestImageDataset(
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 73, in __init__
+[rank1]:     self.samples = self._index()
+[rank1]:                    ^^^^^^^^^^^^^
+[rank1]:   File "/u/gnahass/representation-jepa/src/dataset_utils.py", line 77, in _index
+[rank1]:     with self.manifest.open("r") as f:
+[rank1]:          ^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/sw/user/python/miniforge3-pytorch-2.10.0/lib/python3.12/pathlib.py", line 1013, in open
+[rank1]:     return io.open(self, mode, buffering, encoding, errors, newline)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]: FileNotFoundError: [Errno 2] No such file or directory: '/work/nvme/bhgj/gnahass/representation-jepa/data/manifests/subset6_minus_7_train_flat.txt'
+srun: error: gh110: tasks 0-3: Exited with exit code 1
