@@ -1,0 +1,81 @@
+run:
+  name: "delta-smoke-lejepa-vit-b16-multicrop-webdataset"
+  runs_root: "/work/nvme/bhgj/gnahass/representation-jepa/runs"
+  seed: 2026
+  total_steps: 10
+  warmup_steps: 2
+  log_every: 1
+  ckpt_every: 10
+  resume: false
+  resume_ckpt: null
+
+runtime:
+  distributed: false
+  ddp_backend: "nccl"
+  gpu: 0
+
+data:
+  dataset: "subset6_minus_7"
+  train_root: "/work/nvme/bhgj/gnahass/representation-jepa/data/subset6_minus_7_train_flat"
+  train_shards: "/work/nvme/bhgj/gnahass/representation-jepa/data/shards/subset6_minus_7_train_flat/train_shards.txt"
+  shard_shuffle: true
+  shard_shuffle_buffer: 1000
+  val_root: null
+  test_root: null
+  external_test_roots: []
+  image_size: 224
+
+dataloader:
+  batch_size: 8
+  num_workers: 0
+  shuffle: false
+  pin_memory: true
+  drop_last: true
+
+model:
+  backbone: "vit_base_patch16_224"
+  init: "random"
+  seg_ckpt: null
+  feat_dim: 768
+  proj_dim: 128
+  proj_hidden: 2048
+  proj_layers: 3
+
+ssl:
+  method: "lejepa"
+  aug_mode: "multicrop"
+  normalize_imagenet: true
+  V: 2
+  crop_size: 112
+  crop_scale_min: 0.08
+  crop_scale_max: 1.0
+  global_V: 2
+  global_crop: 224
+  global_scale_min: 0.3
+  global_scale_max: 1.0
+  local_V: 6
+  local_crop: 96
+  local_scale_min: 0.05
+  local_scale_max: 0.3
+
+loss:
+  lamb: 0.05
+  regularizer: "sigreg"
+  sigreg_knots: 17
+  sigreg_num_slices: 256
+  ep_partial_num_slices: 256
+  ep_partial_scale_by_n: false
+  bhep_beta: 1.0
+  bhep_scale_by_n: false
+
+optim:
+  lr: 5.0e-4
+  weight_decay: 5.0e-4
+  warmup_factor: 0.01
+
+sched:
+  final_lr: 5.0e-7
+
+amp:
+  enabled: true
+  dtype: "bf16"

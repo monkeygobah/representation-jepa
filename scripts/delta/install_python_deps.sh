@@ -15,13 +15,14 @@ python -m pip install --user \
   nevergrad \
   opencv-python-headless \
   pyyaml \
-  timm==1.0.26
+  timm==1.0.26 \
+  webdataset
 
 python - <<'PY'
 mods = [
     "numpy", "pandas", "scipy", "imageio", "more_itertools", "skimage",
     "PIL", "sklearn", "pytz", "tzlocal", "seaborn", "matplotlib",
-    "tqdm", "nevergrad", "cv2", "yaml", "timm", "torch", "torchvision",
+    "tqdm", "nevergrad", "cv2", "yaml", "timm", "webdataset", "torch", "torchvision",
 ]
 for m in mods:
     __import__(m)

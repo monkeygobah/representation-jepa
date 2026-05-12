@@ -23,7 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.config_utils import init_run, load_config_bundle
-from src.dataset_utils import build_dataset
+from src.dataset_utils import build_dataset, is_iterable_dataset
 from src.load_backbones import load_encoder_backbone
 from src.objectives.byol import BYOLObjective
 from src.objectives.lejepa import LeJEPAObjective
@@ -160,8 +160,9 @@ def main(args):
         transform, collate_fn = build_ssl_transform(cfg)
         ds = build_dataset(cfg=cfg, transform=transform, root_key="train_root")
 
-        sampler = DistributedSampler(ds, shuffle=True) if ddp_enabled else None
-        shuffle = bool(cfg["dataloader"].get("shuffle", True)) if sampler is None else False
+        ds_is_iterable = is_iterable_dataset(ds)
+        sampler = DistributedSampler(ds, shuffle=True) if ddp_enabled and not ds_is_iterable else None
+        shuffle = bool(cfg["dataloader"].get("shuffle", True)) if sampler is None and not ds_is_iterable else False
         dl = DataLoader(
             ds,
             batch_size=int(cfg["dataloader"]["batch_size"]),
@@ -255,7 +256,11 @@ def main(args):
             if sampler is not None:
                 sampler.set_epoch(epoch)
 
-            iterator = tqdm(dl, total=len(dl), desc=f"epoch {epoch}") if is_main else dl
+            try:
+                epoch_total = len(dl)
+            except TypeError:
+                epoch_total = None
+            iterator = tqdm(dl, total=epoch_total, desc=f"epoch {epoch}") if is_main else dl
 
             for vs, _ in iterator:
                 if step >= total_steps:
