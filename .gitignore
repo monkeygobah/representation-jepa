@@ -13,3 +13,4 @@ segmentation/
 landmark_probe/outputs/embeddings/
 landmark_probe/_deprecated/
 landmark_probe/outputs/
+logs/
