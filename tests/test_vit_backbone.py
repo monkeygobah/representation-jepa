@@ -10,6 +10,7 @@ import torch.nn as nn
 from src.load_backbones import load_encoder_backbone
 from src.backbones.vit import TimmViTPatchMap, patch_tokens_to_feature_map
 from src.objectives.lejepa import LeJEPAObjective
+from src.objectives.vicreg import VICRegObjective
 
 
 def test_patch_tokens_to_feature_map_for_vit_b16_tokens():
@@ -91,6 +92,51 @@ def test_lejepa_multicrop_smoke_with_vit_style_feature_maps():
 
     assert torch.isfinite(loss)
     assert logs["V"] == 8
+
+
+def test_vicreg_smoke_with_vit_style_feature_maps():
+    cfg = {
+        "model": {
+            "feat_dim": 768,
+            "proj_dim": 32,
+            "proj_hidden": 64,
+            "proj_layers": 2,
+        },
+        "vicreg": {
+            "w_inv": 25.0,
+            "w_var": 25.0,
+            "w_cov": 1.0,
+            "gather": False,
+        },
+    }
+    objective = VICRegObjective(cfg)
+    encoder = TimmViTPatchMap(FakeTimmViT(dim=768), patch_size=16)
+    views = torch.randn(2, 2, 3, 224, 224)
+
+    loss, logs = objective(encoder, views)
+
+    assert torch.isfinite(loss)
+    assert logs["V"] == 2
+
+
+def test_vicreg_preserves_resnet_default_feat_dim():
+    cfg = {
+        "model": {
+            "proj_dim": 32,
+            "proj_hidden": 64,
+            "proj_layers": 2,
+        },
+        "vicreg": {
+            "w_inv": 25.0,
+            "w_var": 25.0,
+            "w_cov": 1.0,
+            "gather": False,
+        },
+    }
+
+    objective = VICRegObjective(cfg)
+
+    assert objective.projector.net[0].in_features == 2048
 
 
 def test_load_encoder_backbone_supports_vit_b_and_l_with_timm(monkeypatch):

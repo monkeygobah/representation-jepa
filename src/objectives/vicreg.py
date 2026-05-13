@@ -42,7 +42,7 @@ class VICRegObjective(nn.Module):
         super().__init__()
 
         proj_cfg = ProjectorCfg(
-            in_dim=2048,
+            in_dim=int(cfg["model"].get("feat_dim", 2048)),
             proj_dim=int(cfg["model"]["proj_dim"]),
             hidden_dim=int(cfg["model"]["proj_hidden"]),
             layers=int(cfg["model"]["proj_layers"]),
