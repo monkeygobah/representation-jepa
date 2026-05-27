@@ -14,3 +14,5 @@ landmark_probe/outputs/embeddings/
 landmark_probe/_deprecated/
 landmark_probe/outputs/
 logs/
+disease_embeddings/outputs/
+disease_embeddings/diseased-eyes-224/

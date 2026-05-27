@@ -5,14 +5,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import sys
 import torch
 import torch.nn as nn
+import types
 import yaml
 from PIL import Image
 
 from landmark_probe.config import DatasetMetadataSpec, DatasetSpec, RawDatasetSource, load_study_config
 from landmark_probe.extract.external_vit import DINOv2PatchFeatureMap, MAEViTEncoder
 from landmark_probe.extract.inference import expected_embedding_dim, load_training_config_for_run, pooled_feature_map_embeddings
+from landmark_probe.extract.inference import load_feature_model_for_run
 from landmark_probe.prepare import anatomy
 from landmark_probe.prepare.anatomy import EyeCropSample
 from landmark_probe.prepare.pipeline import build_dataset
@@ -174,6 +177,56 @@ def test_mae_encoder_excludes_cls_token_before_feature_map(monkeypatch) -> None:
 
     assert feat.shape == (2, 768, 14, 14)
     assert torch.equal(feat[0, :, 0, 0], torch.arange(768, dtype=torch.float32))
+
+
+def test_trained_timm_vit_checkpoint_loads_feature_model(monkeypatch, tmp_path: Path) -> None:
+    from landmark_probe.config import RunSpec
+
+    class FakeTimmViT(nn.Module):
+        num_prefix_tokens = 1
+
+        def __init__(self):
+            super().__init__()
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, 768))
+            self.pos_embed = nn.Parameter(torch.zeros(1, 197, 768))
+            self.patch_embed = nn.Module()
+            self.patch_embed.proj = nn.Conv2d(3, 768, kernel_size=16, stride=16)
+            self.blocks = nn.ModuleList()
+            self.norm = nn.LayerNorm(768)
+
+        def forward_features(self, x):
+            batch_size = x.shape[0]
+            patch_tokens = torch.zeros(batch_size, 14 * 14, 768, device=x.device)
+            cls = torch.zeros(batch_size, 1, 768, device=x.device)
+            return torch.cat([cls, patch_tokens], dim=1)
+
+    monkeypatch.setitem(sys.modules, "timm", types.SimpleNamespace(create_model=lambda *args, **kwargs: FakeTimmViT()))
+
+    run_dir = tmp_path / "vit_run"
+    ckpt_dir = run_dir / "checkpoints"
+    ckpt_dir.mkdir(parents=True)
+    train_cfg = {
+        "model": {
+            "backbone": "vit_base_patch16_224",
+            "init": "random",
+            "feat_dim": 768,
+        },
+        "ssl": {"method": "lejepa"},
+    }
+    (run_dir / "config.yaml").write_text(yaml.safe_dump(train_cfg), encoding="utf-8")
+    model = FakeTimmViT()
+    from src.backbones.vit import TimmViTPatchMap
+
+    encoder = TimmViTPatchMap(model=model, patch_size=16)
+    torch.save({"encoder": encoder.state_dict(), "objective": {}, "step": 1, "epoch": 0}, ckpt_dir / "ckpt_step_0000001.pth")
+
+    feature_model, loaded_cfg, checkpoint_path = load_feature_model_for_run(
+        RunSpec(run_name="unit-vit", run_dir=run_dir, checkpoint_step=1)
+    )
+
+    assert loaded_cfg["model"]["backbone"] == "vit_base_patch16_224"
+    assert checkpoint_path == ckpt_dir / "ckpt_step_0000001.pth"
+    assert pooled_feature_map_embeddings(feature_model, torch.zeros(2, 3, 224, 224), "g4").shape == (2, 12288)
 
 
 def test_valid_external_study_config_loads(tmp_path: Path) -> None:

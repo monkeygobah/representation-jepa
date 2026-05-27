@@ -118,7 +118,16 @@ def load_feature_model_for_run(run: RunSpec) -> tuple[nn.Module, dict[str, Any],
     ckpt = torch.load(checkpoint_path, map_location="cpu")
 
     init_mode = str(train_cfg["model"]["init"])
-    if init_mode == "seg_init":
+    backbone = str(train_cfg.get("model", {}).get("backbone", "resnet101"))
+    if backbone != "resnet101":
+        from src.load_backbones import load_encoder_backbone
+
+        encoder = load_encoder_backbone(
+            backbone=backbone,
+            init=init_mode,
+            seg_ckpt=train_cfg.get("model", {}).get("seg_ckpt"),
+        )
+    elif init_mode == "seg_init":
         from torchvision.models.segmentation import deeplabv3_resnet101
 
         model = deeplabv3_resnet101(weights=None, weights_backbone=None)
