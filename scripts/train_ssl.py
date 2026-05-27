@@ -163,12 +163,15 @@ def main(args):
         ds_is_iterable = is_iterable_dataset(ds)
         sampler = DistributedSampler(ds, shuffle=True) if ddp_enabled and not ds_is_iterable else None
         shuffle = bool(cfg["dataloader"].get("shuffle", True)) if sampler is None and not ds_is_iterable else False
+        num_workers = int(cfg["dataloader"]["num_workers"])
+        persistent_workers = bool(cfg["dataloader"].get("persistent_workers", False)) and num_workers > 0
         dl = DataLoader(
             ds,
             batch_size=int(cfg["dataloader"]["batch_size"]),
             sampler=sampler,
             shuffle=shuffle,
-            num_workers=int(cfg["dataloader"]["num_workers"]),
+            num_workers=num_workers,
+            persistent_workers=persistent_workers,
             pin_memory=bool(cfg["dataloader"]["pin_memory"]),
             drop_last=bool(cfg["dataloader"].get("drop_last", False)),
             collate_fn=collate_fn,
