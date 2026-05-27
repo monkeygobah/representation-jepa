@@ -24,7 +24,8 @@ data:
 
 dataloader:
   batch_size: 384
-  num_workers: 0
+  num_workers: 8
+  persistent_workers: true
   shuffle: true
   pin_memory: true
   drop_last: true
