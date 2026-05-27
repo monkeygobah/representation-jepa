@@ -154,6 +154,29 @@ def test_load_encoder_backbone_supports_vit_b_and_l_with_timm(monkeypatch):
     assert vit_l(torch.zeros(1, 3, 224, 224)).shape == (1, 1024, 14, 14)
 
 
+def test_load_encoder_backbone_routes_vit_initialization_without_changing_random(monkeypatch):
+    calls = []
+
+    def create_model(*args, **kwargs):
+        calls.append((args[0], kwargs["pretrained"]))
+        return FakeTimmViT(dim=768)
+
+    monkeypatch.setitem(sys.modules, "timm", types.SimpleNamespace(create_model=create_model))
+
+    load_encoder_backbone(backbone="vit_base_patch16_224", init="random")
+    load_encoder_backbone(backbone="vit_base_patch16_224", init="imagenet")
+
+    assert calls == [
+        ("vit_base_patch16_224", False),
+        ("vit_base_patch16_224.augreg_in1k", True),
+    ]
+
+
+def test_load_encoder_backbone_rejects_unsupported_vit_initialization():
+    with pytest.raises(ValueError, match="random.*imagenet"):
+        load_encoder_backbone(backbone="vit_base_patch16_224", init="seg_init")
+
+
 def test_load_encoder_backbone_preserves_resnet_random_route(monkeypatch):
     sentinel = nn.Identity()
     monkeypatch.setattr("src.load_backbones.load_resnet101_encoder", lambda pretrained: sentinel)

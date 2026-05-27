@@ -10,6 +10,7 @@ import torch.nn as nn
 @dataclass(frozen=True)
 class ViTBackboneSpec:
     model_name: str
+    imagenet_model_name: str
     feat_dim: int
     patch_size: int
 
@@ -17,11 +18,13 @@ class ViTBackboneSpec:
 VIT_BACKBONES: dict[str, ViTBackboneSpec] = {
     "vit_base_patch16_224": ViTBackboneSpec(
         model_name="vit_base_patch16_224",
+        imagenet_model_name="vit_base_patch16_224.augreg_in1k",
         feat_dim=768,
         patch_size=16,
     ),
     "vit_large_patch16_224": ViTBackboneSpec(
         model_name="vit_large_patch16_224",
+        imagenet_model_name="vit_large_patch16_224.augreg_in1k",
         feat_dim=1024,
         patch_size=16,
     ),
@@ -86,8 +89,10 @@ class TimmViTPatchMap(nn.Module):
 def load_timm_vit_backbone(backbone: str, init: str = "random") -> nn.Module:
     if backbone not in VIT_BACKBONES:
         raise ValueError(f"Unknown ViT backbone: {backbone}")
-    if init != "random":
-        raise ValueError(f"ViT backbone {backbone} currently supports init='random' only, got {init!r}")
+    if init not in {"random", "imagenet"}:
+        raise ValueError(
+            f"ViT backbone {backbone} supports init='random' or 'imagenet', got {init!r}"
+        )
 
     try:
         import timm
@@ -95,19 +100,20 @@ def load_timm_vit_backbone(backbone: str, init: str = "random") -> nn.Module:
         raise ImportError("Training ViT backbones requires timm==1.0.26") from exc
 
     spec = VIT_BACKBONES[backbone]
+    model_name = spec.model_name if init == "random" else spec.imagenet_model_name
+    pretrained = init == "imagenet"
     try:
         model = timm.create_model(
-            spec.model_name,
-            pretrained=False,
+            model_name,
+            pretrained=pretrained,
             num_classes=0,
             dynamic_img_size=True,
         )
     except TypeError:
         model = timm.create_model(
-            spec.model_name,
-            pretrained=False,
+            model_name,
+            pretrained=pretrained,
             num_classes=0,
         )
 
     return TimmViTPatchMap(model=model, patch_size=spec.patch_size)
-
