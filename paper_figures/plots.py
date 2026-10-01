@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
+from PIL import Image
 
 from paper_figures.metadata import (
     COMPONENT_COLORS,
@@ -23,9 +24,26 @@ from paper_figures.metadata import (
     SCALE_COLORS,
     SCALE_LABELS,
     SCALE_ORDER,
-    TASK_LABELS,
-    TASK_ORDER,
+TASK_LABELS,
+TASK_ORDER,
 )
+
+LANDMARK_MODEL_ORDER = ["resnet101", "vit_b16"]
+LANDMARK_MODEL_LABELS = {
+    "resnet101": "ResNet-101",
+    "vit_b16": "ViT-B/16",
+}
+LANDMARK_KEYS = [
+    "iris_centroid",
+    "iris_superior",
+    "iris_inferior",
+    "sclera_superior",
+    "sclera_inferior",
+    "medial_canthus",
+    "lateral_canthus",
+    "lid_superior",
+    "lid_inferior",
+]
 
 
 def save_figure(fig: plt.Figure, out_dir: Path, stem: str) -> list[Path]:
@@ -219,6 +237,40 @@ def dataset_geometry_supplement(df: pd.DataFrame, out_dir: Path) -> list[Path]:
     return outputs
 
 
+def dataset_geometry_main_vit(df: pd.DataFrame, out_dir: Path) -> list[Path]:
+    return _geometry_by_scale(
+        df=df,
+        out_dir=out_dir,
+        stem="vit_b16_dataset_geometry_erank_over_d",
+        metric="erank_over_d",
+        metric_label="Effective rank / D ↑",
+        objective_order=DATASET_OBJECTIVE_ORDER,
+    )
+
+
+def dataset_geometry_supplement_vit(df: pd.DataFrame, out_dir: Path) -> list[Path]:
+    metrics = [
+        ("ev1", "Top-1 EV ↓", "vit_b16_dataset_geometry_ev1"),
+        ("ev5", "Top-5 EV ↓", "vit_b16_dataset_geometry_ev5"),
+        ("ev20", "Top-20 EV ↓", "vit_b16_dataset_geometry_ev20"),
+        ("cos_std", "Cosine std ↓", "vit_b16_dataset_geometry_cos_std"),
+        ("cond_1_med", "Cond(1, median) ↓", "vit_b16_dataset_geometry_cond_1_med"),
+    ]
+    outputs: list[Path] = []
+    for metric, label, stem in metrics:
+        outputs.extend(
+            _geometry_by_scale(
+                df=df,
+                out_dir=out_dir,
+                stem=stem,
+                metric=metric,
+                metric_label=label,
+                objective_order=DATASET_OBJECTIVE_ORDER,
+            )
+        )
+    return outputs
+
+
 def _geometry_by_scale(
     df: pd.DataFrame,
     out_dir: Path,
@@ -310,71 +362,12 @@ def dataset_landmarks(
     external_baselines: pd.DataFrame,
     out_dir: Path,
 ) -> list[Path]:
-    fig, axes = plt.subplots(
-        nrows=len(TASK_ORDER),
-        ncols=len(INIT_ORDER),
-        figsize=(10.5, 6.7),
-        sharex=True,
-        sharey=True,
-    )
+    written: list[Path] = []
     x = list(range(len(SCALE_ORDER)))
     values = pd.concat(
         [trained["test_mean_l2"], baselines["test_mean_l2"], external_baselines["test_mean_l2"]],
         ignore_index=True,
     ).dropna()
-    span = values.max() - values.min()
-    ymin = max(0.0, values.min() - 0.08 * span)
-    ymax = values.max() + 0.12 * span
-    for row_idx, task_name in enumerate(TASK_ORDER):
-        for col_idx, init in enumerate(INIT_ORDER):
-            ax = axes[row_idx][col_idx]
-            panel = trained[(trained["task_name"] == task_name) & (trained["init_mode"] == init)]
-            baseline = baselines[(baselines["task_name"] == task_name) & (baselines["init_mode"] == init)]
-            external_panel = external_baselines[external_baselines["task_name"] == task_name]
-            if len(baseline) == 1:
-                ax.axhline(
-                    float(baseline.iloc[0]["test_mean_l2"]),
-                    color="#4b5563",
-                    linestyle=(0, (4, 3)),
-                    linewidth=2.0,
-                    label="Init-only",
-                )
-            for external_init in EXTERNAL_BASELINE_ORDER:
-                external = external_panel[external_panel["init_mode"] == external_init]
-                if len(external) != 1:
-                    continue
-                ax.axhline(
-                    float(external.iloc[0]["test_mean_l2"]),
-                    color=EXTERNAL_BASELINE_COLORS[external_init],
-                    linestyle=(0, (7, 2.5)),
-                    linewidth=2.0,
-                    label=INIT_LABELS[external_init],
-                )
-            for objective in DATASET_OBJECTIVE_ORDER:
-                line = panel[panel["ssl_method"] == objective].sort_values("scale")
-                ax.plot(
-                    x,
-                    line["test_mean_l2"],
-                    color=OBJECTIVE_COLORS[objective],
-                    marker="o",
-                    linewidth=2.8,
-                    markersize=6.5,
-                    label=OBJECTIVE_LABELS[objective],
-                )
-            ax.set_ylim(ymin, ymax)
-            if row_idx == 0:
-                ax.set_title(INIT_LABELS[init])
-            if col_idx == 0:
-                ax.set_ylabel(TASK_LABELS[task_name])
-            if row_idx == len(TASK_ORDER) - 1:
-                ax.set_xticks(x)
-                ax.set_xticklabels([SCALE_LABELS[s] for s in SCALE_ORDER])
-                ax.set_xlabel("SSL training images")
-            else:
-                ax.set_xticks(x, [])
-            ax.grid(True, alpha=0.22, linewidth=0.7)
-            ax.spines["top"].set_visible(False)
-            ax.spines["right"].set_visible(False)
     handles = [
         plt.Line2D(
             [0],
@@ -391,9 +384,9 @@ def dataset_landmarks(
         plt.Line2D(
             [0],
             [0],
-            color="#4b5563",
-            linestyle=(0, (4, 3)),
-            linewidth=2.0,
+            color="#111827",
+            linestyle=(0, (4, 2.4)),
+            linewidth=2.2,
             label="Init-only",
         )
     )
@@ -403,17 +396,179 @@ def dataset_landmarks(
                 [0],
                 [0],
                 color=EXTERNAL_BASELINE_COLORS[external_init],
-                linestyle=(0, (7, 2.5)),
-                linewidth=2.0,
-                label=INIT_LABELS[external_init],
+                linestyle=(0, (3.2, 2.2)),
+                linewidth=2.1,
+                label={"dinov2": "DINOv2", "mae": "MAE"}[external_init],
             )
             for external_init in EXTERNAL_BASELINE_ORDER
         ]
     )
-    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.03), ncol=6, frameon=False)
-    fig.suptitle("G4 periorbital landmark probe", y=0.965, fontsize=14)
-    fig.tight_layout(rect=(0, 0, 1, 0.9))
-    return save_figure(fig, out_dir, "dataset_landmark_g4_within")
+
+    for task_name in TASK_ORDER:
+        fig, axes = plt.subplots(
+            nrows=len(LANDMARK_MODEL_ORDER),
+            ncols=len(INIT_ORDER),
+            figsize=(7.9, 4.6),
+            sharex=True,
+            sharey=False,
+            gridspec_kw={"wspace": 0.08, "hspace": 0.12},
+        )
+
+        for row_idx, model_family in enumerate(LANDMARK_MODEL_ORDER):
+            model_values = pd.concat(
+                [
+                    trained.loc[
+                        (trained["task_name"] == task_name) & (trained["model_family"] == model_family),
+                        "test_mean_l2",
+                    ],
+                    baselines.loc[
+                        (baselines["task_name"] == task_name) & (baselines["model_family"] == model_family),
+                        "test_mean_l2",
+                    ],
+                    external_baselines.loc[external_baselines["task_name"] == task_name, "test_mean_l2"],
+                ],
+                ignore_index=True,
+            ).dropna()
+            span = model_values.max() - model_values.min()
+            ymin = max(0.0, model_values.min() - 0.08 * span)
+            ymax = model_values.max() + 0.10 * span
+            if model_family == "vit_b16" and task_name == "celeb_within":
+                ymin, ymax = 5.0, 11.0
+            if model_family == "vit_b16" and task_name == "cfd_within":
+                ymin, ymax = 3.0, 8.0
+            for col_idx, init in enumerate(INIT_ORDER):
+                ax = axes[row_idx][col_idx]
+                panel = trained[
+                    (trained["task_name"] == task_name)
+                    & (trained["model_family"] == model_family)
+                    & (trained["init_mode"] == init)
+                ]
+                baseline = baselines[
+                    (baselines["task_name"] == task_name)
+                    & (baselines["model_family"] == model_family)
+                    & (baselines["init_mode"] == init)
+                ]
+                external_panel = external_baselines[
+                    external_baselines["task_name"] == task_name
+                ]
+                if len(baseline) == 1:
+                    ax.axhline(
+                        float(baseline.iloc[0]["test_mean_l2"]),
+                        color="#111827",
+                        linestyle=(0, (4, 2.4)),
+                        linewidth=2.1,
+                        alpha=0.86,
+                        label="Init-only",
+                    )
+                for external_init in EXTERNAL_BASELINE_ORDER:
+                    external = external_panel[external_panel["init_mode"] == external_init]
+                    if len(external) != 1:
+                        continue
+                    ax.axhline(
+                            float(external.iloc[0]["test_mean_l2"]),
+                            color=EXTERNAL_BASELINE_COLORS[external_init],
+                            linestyle=(0, (3.2, 2.2)),
+                            linewidth=2.0,
+                            alpha=0.95,
+                            label=INIT_LABELS[external_init],
+                        )
+                for objective in DATASET_OBJECTIVE_ORDER:
+                    line = panel[panel["ssl_method"] == objective].sort_values("scale")
+                    ax.plot(
+                        x,
+                        line["test_mean_l2"],
+                        color=OBJECTIVE_COLORS[objective],
+                        marker="o",
+                        linewidth=2.45,
+                        markersize=5.8,
+                        label=OBJECTIVE_LABELS[objective],
+                    )
+                ax.set_xlim(-0.08, len(SCALE_ORDER) - 0.92)
+                ax.set_ylim(ymin, ymax)
+                if row_idx == 0:
+                    ax.set_title(INIT_LABELS[init], fontsize=11, pad=5)
+                if col_idx == 0:
+                    ax.set_ylabel(f"{LANDMARK_MODEL_LABELS[model_family]}\nMean L2", fontsize=10)
+                if row_idx == len(LANDMARK_MODEL_ORDER) - 1:
+                    ax.set_xticks(x)
+                    ax.set_xticklabels([SCALE_LABELS[s] for s in SCALE_ORDER])
+                    ax.set_xlabel("SSL training images", fontsize=10)
+                else:
+                    ax.set_xticks(x, [])
+                ax.grid(True, axis="y", alpha=0.24, linewidth=0.7)
+                ax.grid(True, axis="x", alpha=0.08, linewidth=0.6)
+                ax.spines["top"].set_visible(False)
+                ax.spines["right"].set_visible(False)
+                ax.tick_params(axis="both", labelsize=9)
+        fig.legend(
+            handles=handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.985),
+            ncol=6,
+            frameon=False,
+            fontsize=8.5,
+            handlelength=2.8,
+            columnspacing=1.2,
+        )
+        fig.suptitle(f"G4 landmark probe: {TASK_LABELS[task_name].replace(' Mean L2', '')}", y=0.905, fontsize=12.0)
+        fig.subplots_adjust(left=0.105, right=0.995, bottom=0.13, top=0.80, wspace=0.08, hspace=0.12)
+        written.extend(save_figure(fig, out_dir, f"dataset_landmark_g4_{task_name}"))
+    return written
+
+
+def _plot_landmark_overlay(ax, row: pd.Series) -> None:
+    gt_x = [float(row[f"{lm}_true_x"]) for lm in LANDMARK_KEYS]
+    gt_y = [float(row[f"{lm}_true_y"]) for lm in LANDMARK_KEYS]
+    pred_x = [float(row[f"{lm}_pred_x"]) for lm in LANDMARK_KEYS]
+    pred_y = [float(row[f"{lm}_pred_y"]) for lm in LANDMARK_KEYS]
+    ax.scatter(gt_x, gt_y, s=52, c="#13a8a8", edgecolors="white", linewidths=0.8, label="Ground truth", zorder=4)
+    ax.scatter(pred_x, pred_y, s=48, c="#d1495b", marker="x", linewidths=2.2, label="Prediction", zorder=5)
+    for gx, gy, px, py in zip(gt_x, gt_y, pred_x, pred_y):
+        ax.plot([gx, px], [gy, py], color="white", linewidth=0.7, alpha=0.75, zorder=3)
+
+
+def dataset_landmark_qualitative_examples(samples: pd.DataFrame, out_dir: Path) -> list[Path]:
+    written: list[Path] = []
+    handles = [
+        plt.Line2D([0], [0], marker="o", color="none", markerfacecolor="#13a8a8", markeredgecolor="white", label="Ground truth"),
+        plt.Line2D([0], [0], marker="x", color="#d1495b", linestyle="none", markersize=7, label="Prediction"),
+    ]
+    for example_type in ["best", "worst"]:
+        subset = samples[samples["example_type"] == example_type].sort_values("column_order")
+        fig, axes = plt.subplots(
+            1,
+            len(subset),
+            figsize=(2.45 * len(subset), 2.85),
+            squeeze=False,
+            gridspec_kw={"wspace": 0.025},
+        )
+        for col_idx, row in enumerate(subset.itertuples(index=False)):
+            row_s = pd.Series(row._asdict())
+            ax = axes[0][col_idx]
+            ax.imshow(Image.open(row_s["image_path"]).convert("RGB"))
+            _plot_landmark_overlay(ax, row_s)
+            title = f"{row_s['model_label']}\n{OBJECTIVE_LABELS[row_s['objective']]}"
+            ax.set_title(title, fontsize=8.8, pad=4)
+            ax.text(
+                0.98,
+                0.04,
+                f"L2 {float(row_s['mean_l2']):.2f}",
+                transform=ax.transAxes,
+                ha="right",
+                va="bottom",
+                fontsize=8.2,
+                color="white",
+                bbox={"facecolor": "black", "alpha": 0.45, "edgecolor": "none", "pad": 2.0},
+            )
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+        fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.015), ncol=2, frameon=False, fontsize=9)
+        fig.suptitle(f"G4 Celeb-to-CFD Landmark Predictions: {example_type.title()} Examples", y=1.02, fontsize=12)
+        fig.subplots_adjust(left=0.005, right=0.995, top=0.78, bottom=0.16, wspace=0.025)
+        written.extend(save_figure(fig, out_dir, f"g4_qualitative_landmark_{example_type}_examples"))
+    return written
 
 
 def rep_training_loss(df: pd.DataFrame, out_dir: Path) -> list[Path]:

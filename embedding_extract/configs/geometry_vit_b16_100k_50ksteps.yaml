@@ -1,0 +1,75 @@
+study:
+  name: "geometry_vit_b16_100k_50ksteps"
+  output_root: "/workspace/embedding_extract/outputs"
+
+runs:
+  - run_name: "geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps.yaml"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps.yaml"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141436__geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps.yaml"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps.yaml"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141536__geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps.yaml"
+    checkpoint_step: 50000
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps"
+    run_dir: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141711__geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps"
+    training_config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps.yaml"
+    checkpoint_step: 50000
+
+datasets:
+  - dataset_name: "subset6_minus_7_test"
+    root: "/workspace/data/subset6_minus_7_test_flat"
+    split_label: "test"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "subset7_eval"
+    root: "/workspace/data/subset7_eval_224_flat"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+  - dataset_name: "cfc_eval"
+    root: "/workspace/data/cfc_split_eval_224"
+    split_label: "eval"
+    image_size: 224
+    normalize_imagenet: true
+
+extraction:
+  batch_size: 256
+  num_workers: 4
+  device: "cuda:0"
+  precision: "fp32"
+  overwrite: false
+
+artifact:
+  save_backbone: false
+  save_projected: true
+
+analyses:
+  isotropy:
+    enabled: true
+    num_pairs: 200000
+    seed: 0
+    embedding_keys: ["proj"]
+
+aggregation:
+  summary_csv: "isotropy_summary_vit_b16_100k_50ksteps.csv"
+  row_keys: ["run_name", "checkpoint_step", "dataset_name", "split_label", "embedding_key"]

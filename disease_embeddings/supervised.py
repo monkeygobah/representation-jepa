@@ -396,6 +396,10 @@ def run_finetune_for_model(cfg: StudyConfig, model_spec: ModelSpec, method: str 
             "external_model": model_spec.external_model,
             "run_name": model_spec.run_name,
             "run_dir": str(model_spec.run_dir) if model_spec.run_dir is not None else None,
+            "config_path": str(model_spec.config_path) if model_spec.config_path is not None else None,
+            "backbone": model_spec.backbone,
+            "pretrain_init": model_spec.pretrain_init,
+            "method": model_spec.method,
         },
         "checkpoint": {
             "checkpoint_step": model_spec.checkpoint_step,

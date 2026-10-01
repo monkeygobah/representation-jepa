@@ -16,3 +16,6 @@ landmark_probe/outputs/
 logs/
 disease_embeddings/outputs/
 disease_embeddings/diseased-eyes-224/
+delta_checkpoints/fixedcompute_vit_b16_50ksteps/
+
+seec_checkpoints/

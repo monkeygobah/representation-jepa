@@ -52,30 +52,53 @@ def _parse_run_name(run_name: str) -> tuple[str, str, str]:
     parts = run_name.split("-")
     if len(parts) < 5:
         raise ValueError(f"Unexpected run_name format: {run_name}")
+    if len(parts) >= 8 and parts[2] == "vit" and parts[3] == "b16":
+        return parts[4], parts[5], parts[6]
     return parts[2], parts[3], parts[4]
 
 
-def build_summary_specs(summary_kind: str, study_tag: str = "") -> tuple[tuple[str, Path], ...]:
+def build_summary_specs(
+    summary_kind: str,
+    study_tag: str = "",
+    study_prefix: str = "geometry",
+    summary_prefix: str = "isotropy_summary",
+) -> tuple[tuple[str, Path], ...]:
     suffix = "_emb" if summary_kind == "emb" else ""
     return (
         (
             "10k",
-            TABLES_ROOT / f"geometry_10k{study_tag}" / f"isotropy_summary_10k{study_tag}{suffix}.csv",
+            TABLES_ROOT
+            / f"{study_prefix}_10k{study_tag}"
+            / f"{summary_prefix}_10k{study_tag}{suffix}.csv",
         ),
         (
             "100k",
-            TABLES_ROOT / f"geometry_100k{study_tag}" / f"isotropy_summary_100k{study_tag}{suffix}.csv",
+            TABLES_ROOT
+            / f"{study_prefix}_100k{study_tag}"
+            / f"{summary_prefix}_100k{study_tag}{suffix}.csv",
         ),
         (
             "1m",
-            TABLES_ROOT / f"geometry_1m{study_tag}" / f"isotropy_summary_1m{study_tag}{suffix}.csv",
+            TABLES_ROOT
+            / f"{study_prefix}_1m{study_tag}"
+            / f"{summary_prefix}_1m{study_tag}{suffix}.csv",
         ),
     )
 
 
-def load_combined_summary(summary_kind: str, study_tag: str = "") -> pd.DataFrame:
+def load_combined_summary(
+    summary_kind: str,
+    study_tag: str = "",
+    study_prefix: str = "geometry",
+    summary_prefix: str = "isotropy_summary",
+) -> pd.DataFrame:
     dfs: list[pd.DataFrame] = []
-    for declared_scale, path in build_summary_specs(summary_kind, study_tag=study_tag):
+    for declared_scale, path in build_summary_specs(
+        summary_kind,
+        study_tag=study_tag,
+        study_prefix=study_prefix,
+        summary_prefix=summary_prefix,
+    ):
         if not path.exists():
             raise FileNotFoundError(f"Missing summary CSV: {path}")
 
@@ -150,7 +173,10 @@ def write_combined_outputs(df: pd.DataFrame, summary_kind: str, output_tag: str 
 
 
 def make_init_focused_figures(
-    df: pd.DataFrame, embedding_key: str = "proj", output_tag: str = ""
+    df: pd.DataFrame,
+    embedding_key: str = "proj",
+    output_tag: str = "",
+    layout: str = "by_init",
 ) -> list[Path]:
     FIGURES_ROOT.mkdir(parents=True, exist_ok=True)
     subset = df[df["embedding_key"] == embedding_key].copy()
@@ -161,71 +187,145 @@ def make_init_focused_figures(
     x_positions = list(range(len(SCALE_ORDER)))
 
     for metric, title in FOCUSED_METRIC_SPECS:
-        fig, axes = plt.subplots(
-            nrows=len(DATASET_ORDER),
-            ncols=len(INIT_ORDER),
-            figsize=(14, 10),
-            sharex=True,
-        )
+        if layout == "vit_compact":
+            present_inits = [init for init in INIT_ORDER if subset["init"].eq(init).any()]
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(13, 8), sharex=True)
+            axes_flat = axes.flatten()
 
-        for row_idx, dataset_name in enumerate(DATASET_ORDER):
-            dataset_df = subset[subset["dataset_name"] == dataset_name]
-            for col_idx, init in enumerate(INIT_ORDER):
-                ax = axes[row_idx][col_idx]
-                panel_df = dataset_df[dataset_df["init"] == init]
+            for idx, dataset_name in enumerate(DATASET_ORDER):
+                ax = axes_flat[idx]
+                dataset_df = subset[subset["dataset_name"] == dataset_name]
 
                 for objective in OBJECTIVE_ORDER:
-                    line_df = panel_df[panel_df["objective"] == objective].sort_values("scale")
-                    if line_df.empty:
-                        continue
+                    for init in present_inits:
+                        line_df = dataset_df[
+                            (dataset_df["objective"] == objective) & (dataset_df["init"] == init)
+                        ].sort_values("scale")
+                        if line_df.empty:
+                            continue
 
-                    ax.plot(
-                        x_positions,
-                        line_df[metric].to_numpy(),
-                        color=OBJECTIVE_COLORS[objective],
-                        linestyle="-",
-                        marker="o",
-                        linewidth=2.2,
-                        markersize=6,
-                        alpha=0.95,
-                        label=objective,
-                    )
+                        ax.plot(
+                            x_positions,
+                            line_df[metric].to_numpy(),
+                            color=OBJECTIVE_COLORS[objective],
+                            linestyle=INIT_LINESTYLES.get(init, "-"),
+                            marker=INIT_MARKERS.get(init, "o"),
+                            linewidth=2.2,
+                            markersize=6,
+                            alpha=0.95,
+                        )
 
-                if row_idx == 0:
-                    ax.set_title(init)
-                if col_idx == 0:
-                    ax.set_ylabel(dataset_name)
-                if row_idx == len(DATASET_ORDER) - 1:
-                    ax.set_xticks(x_positions)
-                    ax.set_xticklabels(SCALE_LABELS)
-                    ax.set_xlabel("Training Set Size")
-                else:
-                    ax.set_xticks(x_positions, [])
+                ax.set_title(dataset_name)
+                ax.set_xticks(x_positions)
+                ax.set_xticklabels(SCALE_LABELS)
+                ax.set_xlabel("SSL training images")
+                if idx in (0, 2):
+                    ax.set_ylabel(title)
                 ax.grid(True, alpha=0.25, linewidth=0.8)
 
-        objective_handles = [
-            plt.Line2D(
-                [0],
-                [0],
-                color=OBJECTIVE_COLORS[objective],
-                linestyle="-",
-                marker="o",
-                linewidth=2.2,
-                markersize=6,
-                label=objective,
+            legend_ax = axes_flat[3]
+            legend_ax.axis("off")
+            objective_handles = [
+                plt.Line2D(
+                    [0],
+                    [0],
+                    color=OBJECTIVE_COLORS[objective],
+                    linestyle="-",
+                    marker="o",
+                    linewidth=2.2,
+                    markersize=6,
+                    label=objective,
+                )
+                for objective in OBJECTIVE_ORDER
+            ]
+            init_handles = [
+                plt.Line2D(
+                    [0],
+                    [0],
+                    color="#222222",
+                    linestyle=INIT_LINESTYLES.get(init, "-"),
+                    marker=INIT_MARKERS.get(init, "o"),
+                    linewidth=2.2,
+                    markersize=6,
+                    label=init.capitalize(),
+                )
+                for init in present_inits
+            ]
+            legend_ax.legend(
+                handles=objective_handles + init_handles,
+                loc="center",
+                frameon=False,
+                ncol=1,
+                title="Legend",
             )
-            for objective in OBJECTIVE_ORDER
-        ]
-        fig.legend(
-            handles=objective_handles,
-            loc="upper center",
-            bbox_to_anchor=(0.5, 0.98),
-            ncol=len(OBJECTIVE_ORDER),
-            frameon=False,
-            title="Objective",
-        )
-        fig.suptitle(f"{title} Across Scale by Initialization", fontsize=16, y=1.01)
-        fig.tight_layout(rect=(0, 0, 1, 0.94))
+            fig.suptitle(f"{title} Across Scale (ViT-B/16)", fontsize=16, y=0.98)
+            fig.tight_layout(rect=(0, 0, 1, 0.95))
+        else:
+            fig, axes = plt.subplots(
+                nrows=len(DATASET_ORDER),
+                ncols=len(INIT_ORDER),
+                figsize=(14, 10),
+                sharex=True,
+            )
+
+            for row_idx, dataset_name in enumerate(DATASET_ORDER):
+                dataset_df = subset[subset["dataset_name"] == dataset_name]
+                for col_idx, init in enumerate(INIT_ORDER):
+                    ax = axes[row_idx][col_idx]
+                    panel_df = dataset_df[dataset_df["init"] == init]
+
+                    for objective in OBJECTIVE_ORDER:
+                        line_df = panel_df[panel_df["objective"] == objective].sort_values("scale")
+                        if line_df.empty:
+                            continue
+
+                        ax.plot(
+                            x_positions,
+                            line_df[metric].to_numpy(),
+                            color=OBJECTIVE_COLORS[objective],
+                            linestyle="-",
+                            marker="o",
+                            linewidth=2.2,
+                            markersize=6,
+                            alpha=0.95,
+                            label=objective,
+                        )
+
+                    if row_idx == 0:
+                        ax.set_title(init)
+                    if col_idx == 0:
+                        ax.set_ylabel(dataset_name)
+                    if row_idx == len(DATASET_ORDER) - 1:
+                        ax.set_xticks(x_positions)
+                        ax.set_xticklabels(SCALE_LABELS)
+                        ax.set_xlabel("Training Set Size")
+                    else:
+                        ax.set_xticks(x_positions, [])
+                    ax.grid(True, alpha=0.25, linewidth=0.8)
+
+            objective_handles = [
+                plt.Line2D(
+                    [0],
+                    [0],
+                    color=OBJECTIVE_COLORS[objective],
+                    linestyle="-",
+                    marker="o",
+                    linewidth=2.2,
+                    markersize=6,
+                    label=objective,
+                )
+                for objective in OBJECTIVE_ORDER
+            ]
+            fig.legend(
+                handles=objective_handles,
+                loc="upper center",
+                bbox_to_anchor=(0.5, 0.98),
+                ncol=len(OBJECTIVE_ORDER),
+                frameon=False,
+                title="Objective",
+            )
+            fig.suptitle(f"{title} Across Scale by Initialization", fontsize=16, y=1.01)
+            fig.tight_layout(rect=(0, 0, 1, 0.94))
 
         suffix = f"_{output_tag}" if output_tag else ""
         png_path = FIGURES_ROOT / f"{metric}_by_init_{embedding_key}{suffix}.png"
@@ -259,15 +359,39 @@ def main() -> None:
         default="",
         help="Tag appended to result filenames, e.g. '50ksteps' (default: empty)",
     )
+    ap.add_argument(
+        "--study-prefix",
+        default="geometry",
+        help="Study-name prefix used in table paths, e.g. 'geometry_vit_b16' (default: geometry)",
+    )
+    ap.add_argument(
+        "--summary-prefix",
+        default="isotropy_summary",
+        help="Summary CSV filename prefix, e.g. 'isotropy_summary_vit_b16' (default: isotropy_summary)",
+    )
+    ap.add_argument(
+        "--layout",
+        choices=["by_init", "vit_compact"],
+        default="by_init",
+        help="Figure layout to render (default: by_init)",
+    )
     args = ap.parse_args()
 
     RESULTS_ROOT.mkdir(parents=True, exist_ok=True)
-    df = load_combined_summary(args.summary_kind, study_tag=args.study_tag)
+    df = load_combined_summary(
+        args.summary_kind,
+        study_tag=args.study_tag,
+        study_prefix=args.study_prefix,
+        summary_prefix=args.summary_prefix,
+    )
     combined_path, plot_ready_path = write_combined_outputs(
         df, args.summary_kind, output_tag=args.output_tag
     )
     init_outputs = make_init_focused_figures(
-        df, embedding_key=args.embedding_key, output_tag=args.output_tag
+        df,
+        embedding_key=args.embedding_key,
+        output_tag=args.output_tag,
+        layout=args.layout,
     )
 
     print(f"Wrote combined summary: {combined_path}")

@@ -1,0 +1,123 @@
+study:
+  name: "disease_vit_b16_1m_50k_g4"
+  output_root: "/workspace/disease_embeddings/outputs/vit_b16_1m_50k"
+
+dataset:
+  root: "/workspace/disease_embeddings/diseased-eyes-224"
+  manifest_csv: "/workspace/disease_embeddings/diseased-eyes-224/manifest.csv"
+  image_size: 224
+  normalize_imagenet: true
+
+pooling: "g4"
+embedding_key: "backbone/features"
+
+models:
+  - model_id: "lejepa_vitb16_1m_random_50k"
+    label: "LeJEPA ViT-B/16 1M Random"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143021__geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "random"
+    method: "lejepa"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+  - model_id: "lejepa_vitb16_1m_imagenet_50k"
+    label: "LeJEPA ViT-B/16 1M ImageNet"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141927__geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "imagenet"
+    method: "lejepa"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+  - model_id: "infonce_vitb16_1m_random_50k"
+    label: "InfoNCE ViT-B/16 1M Random"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "random"
+    method: "infonce"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+  - model_id: "infonce_vitb16_1m_imagenet_50k"
+    label: "InfoNCE ViT-B/16 1M ImageNet"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "imagenet"
+    method: "infonce"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+  - model_id: "vicreg_vitb16_1m_random_50k"
+    label: "VICReg ViT-B/16 1M Random"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143159__geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "random"
+    method: "vicreg"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+  - model_id: "vicreg_vitb16_1m_imagenet_50k"
+    label: "VICReg ViT-B/16 1M ImageNet"
+    source: "checkpoint"
+    run_name: "geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps.yaml"
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143015__geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    checkpoint_step: 50000
+    backbone: "vit_base_patch16_224"
+    pretrain_init: "imagenet"
+    method: "vicreg"
+    feat_dim: 768
+    model_family: "vit"
+    patch_size: 16
+
+extraction:
+  batch_size: 128
+  num_workers: 4
+  device: "auto"
+  precision: "fp32"
+  overwrite: false
+
+reduction:
+  method: "tsne"
+  random_state: 0
+  tsne_perplexity: 30.0
+
+supervised:
+  label_column: "folder_label"
+  group_column: "source_image_path"
+  train_frac: 0.8
+  seed: 0
+  linear_epochs: 100
+  linear_batch_size: 128
+  linear_lr: 0.001
+  finetune_epochs: 5
+  finetune_batch_size: 32
+  backbone_lr: 0.0001
+  head_lr: 0.001
+  weight_decay: 0.0001

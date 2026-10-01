@@ -20,7 +20,8 @@ def resolve_checkpoint_path(run: RunSpec) -> Path:
 
 
 def load_training_config_for_run(run: RunSpec) -> dict[str, Any]:
-    cfg = load_yaml(run.run_dir / "config.yaml")
+    cfg_path = run.training_config_path or (run.run_dir / "config.yaml")
+    cfg = load_yaml(cfg_path)
     if run.config_overrides:
         cfg = merge_training_config(cfg, run.config_overrides)
     return cfg

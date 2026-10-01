@@ -72,6 +72,7 @@ def build_inference_bundle(train_cfg: dict[str, Any], checkpoint_path: str | Pat
     encoder = load_encoder_backbone(
         init=train_cfg["model"]["init"],
         seg_ckpt=train_cfg["model"].get("seg_ckpt"),
+        backbone=train_cfg["model"].get("backbone", "resnet101"),
     )
     # Match the training-time encoder state structure: backbone BatchNorm
     # running stats were disabled before checkpoints were saved.

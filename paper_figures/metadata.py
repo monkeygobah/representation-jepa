@@ -52,7 +52,7 @@ OBJECTIVE_COLORS = {
 }
 EXTERNAL_BASELINE_COLORS = {
     "dinov2": "#2563eb",
-    "mae": "#7c3aed",
+    "mae": "#be185d",
 }
 SCALE_COLORS = {
     "10k": "#1b9e77",
@@ -70,6 +70,11 @@ RUN_RE = re.compile(
     r"(?P<objective>infonce|vicreg|lejepa|bhep|eppartial)-"
     r"(?P<init>random|imagenet|seginit)(?:-50ksteps)?$"
 )
+VIT_RUN_RE = re.compile(
+    r"^geometry-fixedcompute-vit-b16-(?P<scale>10k|100k|1m)-"
+    r"(?P<objective>infonce|vicreg|lejepa)-"
+    r"(?P<init>random|imagenet)(?:-50ksteps)?$"
+)
 
 
 @dataclass(frozen=True)
@@ -82,6 +87,8 @@ class RunParts:
 
 def parse_run_name(run_name: str) -> RunParts:
     match = RUN_RE.match(run_name)
+    if match is None:
+        match = VIT_RUN_RE.match(run_name)
     if match is None:
         raise ValueError(f"Unexpected run_name format: {run_name}")
     return RunParts(

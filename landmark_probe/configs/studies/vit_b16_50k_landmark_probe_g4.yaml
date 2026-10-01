@@ -1,0 +1,140 @@
+study:
+  name: "vit_b16_50k_landmark_probe"
+  output_root: "/workspace/landmark_probe/outputs"
+
+dataset_cfg: "/workspace/landmark_probe/configs/datasets/periorbital_224_v2.yaml"
+probe_cfg: "/workspace/landmark_probe/configs/probes/mlp_default.yaml"
+
+representations:
+  - embedding_key: "backbone"
+    pooling: "g4"
+
+runs:
+  - run_name: "baseline-vit-b16-random"
+    checkpoint_step: 0
+    baseline_init: "random"
+    baseline_backbone: "vit_base_patch16_224"
+    baseline_seed: 2026
+  - run_name: "baseline-vit-b16-imagenet"
+    checkpoint_step: 0
+    baseline_init: "imagenet"
+    baseline_backbone: "vit_base_patch16_224"
+
+  - run_name: "geometry-fixedcompute-vit-b16-10k-infonce-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141748__geometry-fixedcompute-vit-b16-10k-infonce-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-infonce-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-10k-infonce-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141748__geometry-fixedcompute-vit-b16-10k-infonce-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-infonce-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-10k-lejepa-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141748__geometry-fixedcompute-vit-b16-10k-lejepa-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-lejepa-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-10k-lejepa-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141748__geometry-fixedcompute-vit-b16-10k-lejepa-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-lejepa-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-10k-vicreg-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-10k-vicreg-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-vicreg-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-10k-vicreg-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-10k-vicreg-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-10k-vicreg-imagenet-50ksteps.yaml"
+
+  - run_name: "geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-infonce-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-infonce-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141441__geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-lejepa-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141436__geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-lejepa-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141711__geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-vicreg-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141536__geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-100k-vicreg-imagenet-50ksteps.yaml"
+
+  - run_name: "geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-infonce-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141814__geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-infonce-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143021__geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-lejepa-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_141927__geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-lejepa-imagenet-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143159__geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-vicreg-random-50ksteps.yaml"
+  - run_name: "geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps"
+    checkpoint_step: 50000
+    checkpoint_path: "/workspace/delta_checkpoints/fixedcompute_vit_b16_50ksteps/20260527_143015__geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps/checkpoints/ckpt_step_0050000.pth"
+    config_path: "/workspace/configs/delta/fixedcompute_vit_b16_50ksteps/geometry-fixedcompute-vit-b16-1m-vicreg-imagenet-50ksteps.yaml"
+
+tasks:
+  - task_name: "celeb_within"
+    train_split:
+      dataset_name: "celeb"
+      split: "train"
+    val_split:
+      dataset_name: "celeb"
+      split: "val"
+    test_split:
+      dataset_name: "celeb"
+      split: "test"
+  - task_name: "cfd_within"
+    train_split:
+      dataset_name: "cfd"
+      split: "train"
+    val_split:
+      dataset_name: "cfd"
+      split: "val"
+    test_split:
+      dataset_name: "cfd"
+      split: "test"
+  - task_name: "celeb_to_cfd"
+    train_split:
+      dataset_name: "celeb"
+      split: "train"
+    val_split:
+      dataset_name: "celeb"
+      split: "val"
+    test_split:
+      dataset_name: "cfd"
+      split: "test"
+
+extraction:
+  batch_size: 128
+  num_workers: 4
+  device: "cuda:2"
+  precision: "fp32"
+  overwrite: false
+
+artifact:
+  save_embeddings: true
+  save_predictions: true
+  save_per_sample_metrics: true

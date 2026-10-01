@@ -70,10 +70,30 @@ def build_dataset_track(output_root: Path = OUTPUT_ROOT) -> dict[str, list[Path]
     table_paths.append(write_table(landmarks, tables_dir, "dataset_landmark_g4_plot_ready.csv"))
     table_paths.append(write_table(baselines, tables_dir, "dataset_landmark_g4_baselines.csv"))
     table_paths.append(write_table(external_baselines, tables_dir, "dataset_landmark_g4_external_baselines.csv"))
+    transfer_table = data.dataset_landmark_transfer_table()
+    table_paths.append(write_table(transfer_table, tables_dir, "g4_celeb_to_cfd_1m_summary_table.csv"))
     figure_paths.extend(plots.dataset_landmarks(landmarks, baselines, external_baselines, figures_dir))
+    qualitative_examples = data.dataset_landmark_qualitative_examples()
+    table_paths.append(write_table(qualitative_examples, tables_dir, "g4_qualitative_landmark_best_worst_plot_ready.csv"))
+    figure_paths.extend(plots.dataset_landmark_qualitative_examples(qualitative_examples, figures_dir))
 
     manifest = write_manifest(out_dir, "dataset_track", table_paths, figure_paths)
     return {"tables": table_paths, "figures": figure_paths, "manifest": [manifest]}
+
+
+def build_dataset_track_vit_geometry(output_root: Path = OUTPUT_ROOT) -> dict[str, list[Path]]:
+    out_dir = output_root / "dataset_track"
+    tables_dir = out_dir / "tables"
+    figures_dir = out_dir / "figures"
+
+    table_paths: list[Path] = []
+    figure_paths: list[Path] = []
+
+    geometry = data.dataset_geometry_vit()
+    table_paths.append(write_table(geometry, tables_dir, "dataset_geometry_vit_b16_plot_ready.csv"))
+    figure_paths.extend(plots.dataset_geometry_main_vit(geometry, figures_dir))
+    figure_paths.extend(plots.dataset_geometry_supplement_vit(geometry, figures_dir))
+    return {"tables": table_paths, "figures": figure_paths, "manifest": []}
 
 
 def build_rep_learning(output_root: Path = OUTPUT_ROOT) -> dict[str, list[Path]]:
@@ -105,7 +125,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Build manuscript-facing paper figures.")
     ap.add_argument(
         "--preset",
-        choices=["dataset_track", "rep_learning", "all"],
+        choices=["dataset_track", "dataset_track_vit", "rep_learning", "all"],
         default="all",
         help="Figure preset to build.",
     )
@@ -120,6 +140,8 @@ def main() -> None:
     outputs: dict[str, dict[str, list[Path]]] = {}
     if args.preset in ("dataset_track", "all"):
         outputs["dataset_track"] = build_dataset_track(args.output_root)
+    if args.preset in ("dataset_track_vit", "all"):
+        outputs["dataset_track_vit"] = build_dataset_track_vit_geometry(args.output_root)
     if args.preset in ("rep_learning", "all"):
         outputs["rep_learning"] = build_rep_learning(args.output_root)
 

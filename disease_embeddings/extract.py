@@ -58,6 +58,8 @@ def _to_landmark_run(model: ModelSpec) -> RunSpec:
         run_dir=model.run_dir,
         checkpoint_step=model.checkpoint_step,
         checkpoint_path=model.checkpoint_path,
+        config_path=model.config_path,
+        training_config=model.inline_training_config(),
     )
 
 
@@ -109,6 +111,10 @@ def extract_model_embeddings(cfg: StudyConfig, model_spec: ModelSpec, overwrite:
             "external_model": model_spec.external_model,
             "run_name": model_spec.run_name,
             "run_dir": str(model_spec.run_dir) if model_spec.run_dir is not None else None,
+            "config_path": str(model_spec.config_path) if model_spec.config_path is not None else None,
+            "backbone": model_spec.backbone,
+            "pretrain_init": model_spec.pretrain_init,
+            "method": model_spec.method,
         },
         "checkpoint": {
             "checkpoint_step": model_spec.checkpoint_step,
@@ -135,4 +141,3 @@ def extract_model_embeddings(cfg: StudyConfig, model_spec: ModelSpec, overwrite:
 def extract_study(cfg: StudyConfig, overwrite: bool = False) -> list[Path]:
     cfg = replace(cfg, extraction=replace(cfg.extraction, overwrite=cfg.extraction.overwrite or overwrite))
     return [extract_model_embeddings(cfg, model, overwrite=overwrite) for model in cfg.models]
-

@@ -32,6 +32,7 @@ class RunSpec:
     run_dir: Path
     checkpoint_step: int
     checkpoint_path: Path | None = None
+    training_config_path: Path | None = None
     config_overrides: dict[str, Any] = field(default_factory=dict)
 
 
@@ -130,6 +131,7 @@ def _parse_run(base_dir: Path, raw: dict[str, Any]) -> RunSpec:
     run_dir = _resolve_path(base_dir, _require(raw.get("run_dir"), "runs[].run_dir"))
     checkpoint_step = int(_require(raw.get("checkpoint_step"), "runs[].checkpoint_step"))
     checkpoint_path = _resolve_path(base_dir, raw.get("checkpoint_path"))
+    training_config_path = _resolve_path(base_dir, raw.get("training_config_path"))
     run_name = raw.get("run_name") or run_dir.name
     overrides = dict(raw.get("config_overrides", {}))
     return RunSpec(
@@ -137,6 +139,7 @@ def _parse_run(base_dir: Path, raw: dict[str, Any]) -> RunSpec:
         run_dir=run_dir,
         checkpoint_step=checkpoint_step,
         checkpoint_path=checkpoint_path,
+        training_config_path=training_config_path,
         config_overrides=overrides,
     )
 
@@ -234,8 +237,9 @@ def validate_study_config(cfg: StudyConfig) -> None:
     for run in cfg.runs:
         if not run.run_dir.exists():
             raise FileNotFoundError(f"Run directory does not exist: {run.run_dir}")
-        if not (run.run_dir / "config.yaml").exists():
-            raise FileNotFoundError(f"Run config missing at: {run.run_dir / 'config.yaml'}")
+        config_path = run.training_config_path or (run.run_dir / "config.yaml")
+        if not config_path.exists():
+            raise FileNotFoundError(f"Run config missing at: {config_path}")
 
     for dataset in cfg.datasets:
         if not dataset.root.exists():

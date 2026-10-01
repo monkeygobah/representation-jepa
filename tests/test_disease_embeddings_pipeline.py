@@ -13,6 +13,7 @@ from disease_embeddings.config import load_study_config
 from disease_embeddings.datasets import build_dataloader, load_manifest_records
 from disease_embeddings.paths import adapted_reduction_csv_path, embedding_artifact_path, finetune_dir, linear_probe_dir, split_csv_path
 from disease_embeddings.reduce_plot import plot_coordinates, reduce_and_plot_model, reduce_embeddings
+from disease_embeddings.extract import _to_landmark_run
 from disease_embeddings.supervised import (
     FineTuneClassifier,
     build_grouped_split,
@@ -23,6 +24,7 @@ from disease_embeddings.supervised import (
 )
 from disease_embeddings.summarize import adapted_knn5_metrics_for_model, summarize_adapted_knn5, summarize_finetune, summarize_linear_probe
 from disease_embeddings.summarize import knn5_metrics_for_model
+from landmark_probe.extract.inference import expected_embedding_dim, load_training_config_for_run
 from landmark_probe.extract.inference import pooled_feature_map_embeddings
 
 
@@ -60,6 +62,115 @@ def test_g4_pooling_returns_expected_dimensions() -> None:
 
     assert resnet_emb.shape == (2, 32768)
     assert vit_emb.shape == (2, 12288)
+
+
+def test_checkpoint_only_vit_config_loads_without_run_config(tmp_path: Path) -> None:
+    root = _write_minimal_manifest(tmp_path)
+    ckpt_path = tmp_path / "checkpoint_only" / "checkpoints" / "ckpt_step_0050000.pth"
+    ckpt_path.parent.mkdir(parents=True)
+    torch.save({"encoder": {}, "step": 50000}, ckpt_path)
+    cfg_path = tmp_path / "checkpoint_only_config.yaml"
+    cfg = {
+        "study": {"name": "checkpoint_only", "output_root": str(tmp_path / "outputs")},
+        "dataset": {
+            "root": str(root),
+            "manifest_csv": str(root / "manifest.csv"),
+            "image_size": 16,
+            "normalize_imagenet": True,
+        },
+        "pooling": "g4",
+        "embedding_key": "backbone/features",
+        "models": [
+            {
+                "model_id": "unit_vit_imagenet",
+                "label": "Unit ViT ImageNet",
+                "source": "checkpoint",
+                "run_name": "unit-vit-imagenet",
+                "checkpoint_path": str(ckpt_path),
+                "checkpoint_step": 50000,
+                "backbone": "vit_base_patch16_224",
+                "pretrain_init": "imagenet",
+                "method": "lejepa",
+                "feat_dim": 768,
+                "model_family": "vit",
+                "patch_size": 16,
+            }
+        ],
+        "extraction": {"batch_size": 2, "num_workers": 0, "device": "cpu", "precision": "fp32"},
+        "reduction": {"method": "pca", "random_state": 0, "tsne_perplexity": 2},
+    }
+    cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+    study = load_study_config(cfg_path)
+    model = study.models[0]
+    run = _to_landmark_run(model)
+    train_cfg = load_training_config_for_run(run)
+
+    assert model.run_dir is None
+    assert run.training_config is not None
+    assert train_cfg["model"]["backbone"] == "vit_base_patch16_224"
+    assert train_cfg["model"]["init"] == "imagenet"
+    assert train_cfg["ssl"]["method"] == "lejepa"
+    assert expected_embedding_dim(train_cfg, "g4") == 12288
+
+
+def test_checkpoint_only_vit_config_can_use_separate_config_path(tmp_path: Path) -> None:
+    root = _write_minimal_manifest(tmp_path)
+    ckpt_path = tmp_path / "checkpoint_only" / "checkpoints" / "ckpt_step_0050000.pth"
+    config_path = tmp_path / "configs" / "unit-vit.yaml"
+    ckpt_path.parent.mkdir(parents=True)
+    config_path.parent.mkdir(parents=True)
+    torch.save({"encoder": {}, "step": 50000}, ckpt_path)
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "run": {"name": "unit-vit-config"},
+                "model": {
+                    "backbone": "vit_base_patch16_224",
+                    "init": "imagenet",
+                    "feat_dim": 768,
+                },
+                "ssl": {"method": "vicreg"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    cfg_path = tmp_path / "checkpoint_config_path.yaml"
+    cfg = {
+        "study": {"name": "checkpoint_config_path", "output_root": str(tmp_path / "outputs")},
+        "dataset": {
+            "root": str(root),
+            "manifest_csv": str(root / "manifest.csv"),
+            "image_size": 16,
+            "normalize_imagenet": True,
+        },
+        "pooling": "g4",
+        "embedding_key": "backbone/features",
+        "models": [
+            {
+                "model_id": "unit_vit_config_path",
+                "label": "Unit ViT Config Path",
+                "source": "checkpoint",
+                "run_name": "unit-vit-config",
+                "checkpoint_path": str(ckpt_path),
+                "config_path": str(config_path),
+                "checkpoint_step": 50000,
+            }
+        ],
+        "extraction": {"batch_size": 2, "num_workers": 0, "device": "cpu", "precision": "fp32"},
+        "reduction": {"method": "pca", "random_state": 0, "tsne_perplexity": 2},
+    }
+    cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+    study = load_study_config(cfg_path)
+    run = _to_landmark_run(study.models[0])
+    train_cfg = load_training_config_for_run(run)
+
+    assert run.config_path == config_path
+    assert run.training_config is None
+    assert train_cfg["model"]["init"] == "imagenet"
+    assert train_cfg["ssl"]["method"] == "vicreg"
+    assert expected_embedding_dim(train_cfg, "g4") == 12288
 
 
 def test_reduction_csv_includes_coordinates_and_metadata(tmp_path: Path) -> None:
@@ -447,6 +558,26 @@ def _write_supervised_config(tmp_path: Path, linear_epochs: int = 3) -> Path:
     cfg_path = tmp_path / "supervised_config.yaml"
     cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
     return cfg_path
+
+
+def _write_minimal_manifest(tmp_path: Path) -> Path:
+    root = tmp_path / "minimal-eyes"
+    (root / "CAP").mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (12, 10), color="red").save(root / "CAP" / "cap_od.png")
+    pd.DataFrame(
+        [
+            {
+                "output_path": "CAP/cap_od.png",
+                "source_image_path": "CAP/cap.png",
+                "folder_label": "CAP",
+                "filename": "cap.png",
+                "eye": "OD",
+                "disease_status": "dis",
+                "source_mode": "split_half",
+            }
+        ]
+    ).to_csv(root / "manifest.csv", index=False)
+    return root
 
 
 def _write_unit_embedding_artifact_for_knn(cfg, model) -> None:

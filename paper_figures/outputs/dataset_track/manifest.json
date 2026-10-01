@@ -23,7 +23,9 @@
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_geometry_plot_ready.csv",
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_plot_ready.csv",
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_baselines.csv",
-    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_external_baselines.csv"
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/dataset_landmark_g4_external_baselines.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/g4_celeb_to_cfd_1m_summary_table.csv",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/tables/g4_qualitative_landmark_best_worst_plot_ready.csv"
   ],
   "figures": [
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_resource_summary.png",
@@ -35,6 +37,9 @@
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_ev20.png",
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_cos_std.png",
     "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_geometry_cond_1_med.png",
-    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_landmark_g4_within.png"
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_landmark_g4_celeb_within.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/dataset_landmark_g4_cfd_within.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/g4_qualitative_landmark_best_examples.png",
+    "/home/georgie/Desktop/representation-jepa/paper_figures/outputs/dataset_track/figures/g4_qualitative_landmark_worst_examples.png"
   ]
 }

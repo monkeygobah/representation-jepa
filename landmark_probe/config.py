@@ -100,7 +100,10 @@ class RunSpec:
     run_dir: Path | None
     checkpoint_step: int
     checkpoint_path: Path | None = None
+    config_path: Path | None = None
+    training_config: dict[str, Any] | None = None
     baseline_init: str | None = None
+    baseline_backbone: str = "resnet101"
     baseline_seed: int = 0
     baseline_seg_ckpt: Path | None = None
     external_model: str | None = None
@@ -298,7 +301,9 @@ def load_study_config(path: str | Path) -> StudyConfig:
             run_dir=_resolve_path(base_dir, item.get("run_dir")),
             checkpoint_step=int(item.get("checkpoint_step", 0)),
             checkpoint_path=_resolve_path(base_dir, item.get("checkpoint_path")),
+            config_path=_resolve_path(base_dir, item.get("config_path")),
             baseline_init=str(item["baseline_init"]) if item.get("baseline_init") is not None else None,
+            baseline_backbone=str(item.get("baseline_backbone", "resnet101")),
             baseline_seed=int(item.get("baseline_seed", 0)),
             baseline_seg_ckpt=_resolve_path(base_dir, item.get("baseline_seg_ckpt")),
             external_model=str(item["external_model"]) if item.get("external_model") is not None else None,
@@ -372,8 +377,8 @@ def validate_study_config(cfg: StudyConfig) -> None:
         if run.external_model is not None:
             if run.external_model not in VALID_EXTERNAL_MODELS:
                 raise ValueError(f"Unsupported external_model for run {run.run_name}: {run.external_model}")
-            if run.run_dir is not None or run.baseline_init is not None:
-                raise ValueError(f"External model run {run.run_name} cannot define run_dir or baseline_init")
+            if run.run_dir is not None or run.config_path is not None or run.baseline_init is not None:
+                raise ValueError(f"External model run {run.run_name} cannot define run_dir or baseline_init; config_path is also unsupported")
             if run.checkpoint_step != 0:
                 raise ValueError(f"External model run {run.run_name} must use checkpoint_step 0")
             for representation in cfg.representations:
@@ -384,19 +389,27 @@ def validate_study_config(cfg: StudyConfig) -> None:
                     )
             continue
         if run.baseline_init is not None:
-            if run.run_dir is not None:
-                raise ValueError(f"Baseline run {run.run_name} cannot define run_dir")
+            if run.run_dir is not None or run.config_path is not None or run.checkpoint_path is not None:
+                raise ValueError(f"Baseline run {run.run_name} cannot define run_dir, config_path, or checkpoint_path")
             if run.baseline_init not in {"random", "imagenet", "seg_init"}:
                 raise ValueError(f"Unsupported baseline_init for run {run.run_name}: {run.baseline_init}")
+            if run.baseline_backbone != "resnet101" and run.baseline_init == "seg_init":
+                raise ValueError(f"Baseline run {run.run_name} cannot use seg_init with {run.baseline_backbone}")
             if run.baseline_init == "seg_init" and run.baseline_seg_ckpt is not None and not run.baseline_seg_ckpt.exists():
                 raise FileNotFoundError(f"Baseline segmentation checkpoint missing: {run.baseline_seg_ckpt}")
             continue
-        if run.run_dir is None:
-            raise ValueError(f"Run {run.run_name} must define run_dir unless baseline_init is set")
-        if not run.run_dir.exists():
+        if run.run_dir is None and run.checkpoint_path is None:
+            raise ValueError(f"Run {run.run_name} must define run_dir or checkpoint_path unless baseline_init is set")
+        if run.run_dir is not None and not run.run_dir.exists():
             raise FileNotFoundError(f"Run directory does not exist: {run.run_dir}")
-        if not (run.run_dir / "config.yaml").exists():
-            raise FileNotFoundError(f"Run config missing: {run.run_dir / 'config.yaml'}")
+        if run.checkpoint_path is not None and not run.checkpoint_path.exists():
+            raise FileNotFoundError(f"Run checkpoint missing: {run.checkpoint_path}")
+        if run.config_path is not None:
+            if not run.config_path.exists():
+                raise FileNotFoundError(f"Run config missing: {run.config_path}")
+        elif run.run_dir is None or not (run.run_dir / "config.yaml").exists():
+            expected_config = None if run.run_dir is None else run.run_dir / "config.yaml"
+            raise FileNotFoundError(f"Run config missing: {expected_config}")
     for task in cfg.tasks:
         for split_spec in (task.train_split, task.val_split, task.test_split):
             if split_spec.split not in {"train", "val", "test"}:

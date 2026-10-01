@@ -34,6 +34,8 @@ def _disable_running_stats(model: nn.Module) -> None:
 
 
 def load_training_config_for_run(run: RunSpec) -> dict[str, Any]:
+    if run.training_config is not None:
+        return run.training_config
     if run.external_model is not None:
         info = external_model_info(run.external_model)
         return {
@@ -57,6 +59,19 @@ def load_training_config_for_run(run: RunSpec) -> dict[str, Any]:
             },
         }
     if run.baseline_init is not None:
+        backbone = run.baseline_backbone
+        feat_dim = 2048
+        model_family = "resnet"
+        patch_size = None
+        if backbone != "resnet101":
+            from src.backbones.vit import VIT_BACKBONES
+
+            if backbone not in VIT_BACKBONES:
+                raise ValueError(f"Unsupported baseline_backbone for run {run.run_name}: {backbone}")
+            spec = VIT_BACKBONES[backbone]
+            feat_dim = spec.feat_dim
+            model_family = "vit"
+            patch_size = spec.patch_size
         seg_ckpt = run.baseline_seg_ckpt or Path("/workspace/models/hp_tune.pth")
         return {
             "run": {
@@ -64,18 +79,24 @@ def load_training_config_for_run(run: RunSpec) -> dict[str, Any]:
                 "seed": run.baseline_seed,
             },
             "model": {
-                "backbone": "resnet101",
+                "backbone": backbone,
                 "init": run.baseline_init,
                 "seg_ckpt": str(seg_ckpt),
-                "feat_dim": 2048,
+                "feat_dim": feat_dim,
+                "model_family": model_family,
+                "model_arch": backbone,
+                "patch_size": patch_size,
             },
             "ssl": {
                 "method": "baseline",
             },
         }
-    if run.run_dir is None:
-        raise ValueError(f"Run {run.run_name} has no run_dir")
-    with (run.run_dir / "config.yaml").open("r", encoding="utf-8") as f:
+    config_path = run.config_path
+    if config_path is None:
+        if run.run_dir is None:
+            raise ValueError(f"Run {run.run_name} has no run_dir or config_path")
+        config_path = run.run_dir / "config.yaml"
+    with config_path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
@@ -91,9 +112,11 @@ def checkpoint_path_for_run(run: RunSpec) -> Path:
         return Path(f"external://{run.external_model}")
     if run.baseline_init is not None:
         raise ValueError(f"Baseline run {run.run_name} does not use a checkpoint")
+    if run.checkpoint_path is not None:
+        return run.checkpoint_path
     if run.run_dir is None:
-        raise ValueError(f"Run {run.run_name} has no run_dir")
-    return run.checkpoint_path or (run.run_dir / "checkpoints" / f"ckpt_step_{run.checkpoint_step:07d}.pth")
+        raise ValueError(f"Run {run.run_name} has no run_dir or checkpoint_path")
+    return run.run_dir / "checkpoints" / f"ckpt_step_{run.checkpoint_step:07d}.pth"
 
 
 def load_feature_model_for_run(run: RunSpec) -> tuple[nn.Module, dict[str, Any], Path]:
@@ -107,12 +130,16 @@ def load_feature_model_for_run(run: RunSpec) -> tuple[nn.Module, dict[str, Any],
 
         torch.manual_seed(run.baseline_seed)
         seg_ckpt = run.baseline_seg_ckpt or Path("/workspace/models/hp_tune.pth")
-        encoder = load_encoder_backbone(init=run.baseline_init, seg_ckpt=str(seg_ckpt))
+        encoder = load_encoder_backbone(
+            backbone=run.baseline_backbone,
+            init=run.baseline_init,
+            seg_ckpt=str(seg_ckpt),
+        )
         _disable_running_stats(encoder)
         encoder.eval()
         for param in encoder.parameters():
             param.requires_grad_(False)
-        return encoder, train_cfg, Path(f"baseline://{run.baseline_init}")
+        return encoder, train_cfg, Path(f"baseline://{run.baseline_backbone}/{run.baseline_init}")
 
     checkpoint_path = checkpoint_path_for_run(run)
     ckpt = torch.load(checkpoint_path, map_location="cpu")
@@ -122,9 +149,10 @@ def load_feature_model_for_run(run: RunSpec) -> tuple[nn.Module, dict[str, Any],
     if backbone != "resnet101":
         from src.load_backbones import load_encoder_backbone
 
+        encoder_init = "random" if init_mode == "imagenet" else init_mode
         encoder = load_encoder_backbone(
             backbone=backbone,
-            init=init_mode,
+            init=encoder_init,
             seg_ckpt=train_cfg.get("model", {}).get("seg_ckpt"),
         )
     elif init_mode == "seg_init":

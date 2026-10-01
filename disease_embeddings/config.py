@@ -47,7 +47,50 @@ class ModelSpec:
     checkpoint_step: int
     run_dir: Path | None = None
     checkpoint_path: Path | None = None
+    config_path: Path | None = None
+    backbone: str | None = None
+    pretrain_init: str | None = None
+    method: str | None = None
+    feat_dim: int | None = None
+    model_family: str | None = None
+    patch_size: int | None = None
     external_model: str | None = None
+
+    def inline_training_config(self) -> dict[str, Any] | None:
+        if self.config_path is not None:
+            return None
+        if self.backbone is None and self.pretrain_init is None and self.method is None and self.feat_dim is None:
+            return None
+        backbone = self.backbone or "resnet101"
+        if self.feat_dim is not None:
+            feat_dim = int(self.feat_dim)
+        elif backbone.startswith("vit_"):
+            feat_dim = 768
+        else:
+            feat_dim = 2048
+        if self.model_family is not None:
+            model_family = self.model_family
+        elif backbone.startswith("vit_"):
+            model_family = "vit"
+        else:
+            model_family = "resnet"
+        return {
+            "run": {
+                "name": self.run_name,
+            },
+            "model": {
+                "backbone": backbone,
+                "init": self.pretrain_init or "random",
+                "feat_dim": feat_dim,
+                "model_family": model_family,
+                "model_arch": backbone,
+                "patch_size": self.patch_size,
+                "pretrain_init": self.pretrain_init,
+            },
+            "ssl": {
+                "method": self.method or "checkpoint",
+            },
+        }
 
 
 @dataclass(frozen=True)
@@ -136,8 +179,10 @@ def _parse_model(base_dir: Path, raw: dict[str, Any]) -> ModelSpec:
     external_model = raw.get("external_model")
     run_dir = _resolve_path(base_dir, raw.get("run_dir"))
     checkpoint_path = _resolve_path(base_dir, raw.get("checkpoint_path"))
-    if source == "checkpoint" and run_dir is None:
-        raise ValueError("Checkpoint models must define run_dir")
+    config_path = _resolve_path(base_dir, raw.get("config_path"))
+    has_inline_config = any(raw.get(key) is not None for key in ("backbone", "pretrain_init", "method", "feat_dim"))
+    if source == "checkpoint" and run_dir is None and config_path is None and not has_inline_config:
+        raise ValueError("Checkpoint models must define run_dir, config_path, or inline checkpoint metadata")
     if source == "external" and external_model is None:
         raise ValueError("External models must define external_model")
     return ModelSpec(
@@ -148,6 +193,13 @@ def _parse_model(base_dir: Path, raw: dict[str, Any]) -> ModelSpec:
         checkpoint_step=int(raw.get("checkpoint_step", 0)),
         run_dir=run_dir,
         checkpoint_path=checkpoint_path,
+        config_path=config_path,
+        backbone=str(raw["backbone"]) if raw.get("backbone") is not None else None,
+        pretrain_init=str(raw["pretrain_init"]) if raw.get("pretrain_init") is not None else None,
+        method=str(raw["method"]) if raw.get("method") is not None else None,
+        feat_dim=int(raw["feat_dim"]) if raw.get("feat_dim") is not None else None,
+        model_family=str(raw["model_family"]) if raw.get("model_family") is not None else None,
+        patch_size=int(raw["patch_size"]) if raw.get("patch_size") is not None else None,
         external_model=str(external_model) if external_model is not None else None,
     )
 
@@ -235,13 +287,21 @@ def validate_study_config(cfg: StudyConfig) -> None:
             raise ValueError(f"Duplicate model_id in config: {model.model_id}")
         seen.add(model.model_id)
         if model.source == "checkpoint":
-            if model.run_dir is None:
-                raise ValueError(f"Checkpoint model {model.model_id} is missing run_dir")
-            if not model.run_dir.exists():
-                raise FileNotFoundError(f"Run directory missing for {model.model_id}: {model.run_dir}")
-            if not (model.run_dir / "config.yaml").exists():
-                raise FileNotFoundError(f"Run config missing for {model.model_id}: {model.run_dir / 'config.yaml'}")
-            checkpoint_path = model.checkpoint_path or model.run_dir / "checkpoints" / f"ckpt_step_{model.checkpoint_step:07d}.pth"
+            inline_config = model.inline_training_config()
+            if model.run_dir is None and model.config_path is None and inline_config is None:
+                raise ValueError(f"Checkpoint model {model.model_id} is missing run_dir, config_path, or inline checkpoint metadata")
+            if model.run_dir is not None:
+                if not model.run_dir.exists():
+                    raise FileNotFoundError(f"Run directory missing for {model.model_id}: {model.run_dir}")
+                if model.config_path is None and inline_config is None and not (model.run_dir / "config.yaml").exists():
+                    raise FileNotFoundError(f"Run config missing for {model.model_id}: {model.run_dir / 'config.yaml'}")
+            if model.config_path is not None and not model.config_path.exists():
+                raise FileNotFoundError(f"Run config missing for {model.model_id}: {model.config_path}")
+            checkpoint_path = model.checkpoint_path
+            if checkpoint_path is None:
+                if model.run_dir is None:
+                    raise ValueError(f"Checkpoint model {model.model_id} is missing checkpoint_path")
+                checkpoint_path = model.run_dir / "checkpoints" / f"ckpt_step_{model.checkpoint_step:07d}.pth"
             if not checkpoint_path.exists():
                 raise FileNotFoundError(f"Checkpoint missing for {model.model_id}: {checkpoint_path}")
         elif model.source == "external":
